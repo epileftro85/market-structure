@@ -1,8 +1,8 @@
-// Traducciones de la interfaz (español / inglés). Diccionario propio, sin librerías.
+// UI translations (Spanish / English). Our own dictionary, no libraries.
 //
-// Idioma: cookie `ms_lang` (botón ES/EN de la barra) o, si no hay, el que define el servidor
-// (`lang` en server/config.js, APP_LANG=en npm start). Español si nada responde.
-// Cambiar de idioma recarga la página: el estado vive en la URL, así que no se pierde nada.
+// Language: cookie `ms_lang` (ES/EN button in the bar) or, if absent, the one set by the server
+// (`lang` in server/config.js, APP_LANG=en npm start). Spanish if nothing answers.
+// Switching language reloads the page: state lives in the URL, so nothing is lost.
 import es from './locales/es.js';
 import en from './locales/en.js';
 
@@ -29,7 +29,7 @@ async function serverDefault() {
 export const LANG = readCookie() ?? (await serverDefault());
 document.documentElement.lang = LANG;
 
-/** Texto traducido. `{x}` en el texto se reemplaza por vars.x. Si falta la clave, cae a español y luego a la clave. */
+/** Translated text. `{x}` in the text is replaced by vars.x. If the key is missing, falls back to Spanish and then to the key. */
 export function t(key, vars) {
   const s = DICTS[LANG][key] ?? es[key] ?? key;
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
@@ -41,7 +41,7 @@ export function setLang(lang) {
   location.reload();
 }
 
-/** Traduce el HTML estático: data-i18n (texto), data-i18n-title, data-i18n-placeholder, data-i18n-aria-label. */
+/** Translates the static HTML: data-i18n (text), data-i18n-title, data-i18n-placeholder, data-i18n-aria-label. */
 export function translateDom(root = document) {
   for (const [attr, prop] of [['i18n', null], ['i18nTitle', 'title'], ['i18nPlaceholder', 'placeholder'], ['i18nAriaLabel', 'aria-label']]) {
     const sel = `[data-${attr.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}]`;

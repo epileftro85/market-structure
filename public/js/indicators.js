@@ -1,9 +1,9 @@
-// Indicadores adicionales. Módulo PURO (velas entran, datos salen), probado con `npm test`.
+// Additional indicators. PURE module (bars in, data out), tested with `npm test`.
 //
-// Formato de velas: { time, open, high, low, close, volume? }
-// Todas las funciones devuelven índices además de tiempos, para poder dibujar y probar fácil.
+// Bar format: { time, open, high, low, close, volume? }
+// Every function returns indices as well as times, to make drawing and testing easy.
 
-/** ATR (promedio simple del True Range, con ventana creciente al inicio). */
+/** ATR (simple average of the True Range, with a growing window at the start). */
 export function atr(bars, period = 14) {
   const out = new Array(bars.length).fill(0);
   const tr = bars.map((b, i) =>
@@ -18,7 +18,7 @@ export function atr(bars, period = 14) {
   return out;
 }
 
-/** EMA sembrada con la SMA de las primeras `period` velas. Devuelve [{time, value}]. */
+/** EMA seeded with the SMA of the first `period` bars. Returns [{time, value}]. */
 export function ema(bars, period) {
   if (bars.length < period) return [];
   const k = 2 / (period + 1);
@@ -34,8 +34,8 @@ export function ema(bars, period) {
 }
 
 /**
- * VWAP que se reinicia cada día (el `time` ya viene en hora de la bolsa, así que el día = floor(time/86400)).
- * Sin volumen (p. ej. forex con MIDPOINT) devuelve [] en vez de inventar un valor.
+ * VWAP that resets every day (`time` is already in exchange time, so day = floor(time/86400)).
+ * Without volume (e.g. forex with MIDPOINT) it returns [] instead of making up a value.
  */
 export function vwapDaily(bars) {
   const out = [];
@@ -52,11 +52,11 @@ export function vwapDaily(bars) {
 }
 
 /**
- * Fair Value Gaps: hueco de 3 velas que el precio no cubrió.
- *  alcista: low[i] > high[i-2]  → zona [high[i-2], low[i]]
- *  bajista: high[i] < low[i-2]  → zona [high[i], low[i-2]]
- * Se considera "llenado" cuando una vela posterior cruza por completo la zona.
- * @param {{minAtr?:number, atrPeriod?:number}} [opts] minAtr: tamaño mínimo del hueco en múltiplos de ATR
+ * Fair Value Gaps: 3-bar gap that price did not cover.
+ *  bullish: low[i] > high[i-2]  → zone [high[i-2], low[i]]
+ *  bearish: high[i] < low[i-2]  → zone [high[i], low[i-2]]
+ * It counts as "filled" when a later bar crosses the whole zone.
+ * @param {{minAtr?:number, atrPeriod?:number}} [opts] minAtr: minimum gap size in multiples of ATR
  */
 export function detectFVG(bars, opts = {}) {
   const minAtr = opts.minAtr ?? 0.25;
@@ -78,11 +78,11 @@ export function detectFVG(bars, opts = {}) {
 }
 
 /**
- * Order Blocks a partir de las rupturas de estructura (BOS/CHoCH).
- *  ruptura alcista: entre el swing roto y la ruptura se toma el mínimo; el OB es la última
- *                   vela bajista en (o hasta 2 velas antes de) ese mínimo.
- *  ruptura bajista: simétrico con el máximo y la última vela alcista.
- * La zona es el rango completo de esa vela. Queda "mitigado" cuando una vela posterior CIERRA al otro lado.
+ * Order Blocks from structure breaks (BOS/CHoCH).
+ *  bullish break: take the low between the broken swing and the break; the OB is the last
+ *                 bearish candle at (or up to 2 candles before) that low.
+ *  bearish break: symmetric, with the high and the last bullish candle.
+ * The zone is that candle's full range. It is "mitigated" when a later candle CLOSES on the other side.
  */
 export function detectOrderBlocks(bars, breaks) {
   const out = [];
@@ -114,10 +114,10 @@ export function detectOrderBlocks(bars, breaks) {
 }
 
 /**
- * Máximos/mínimos casi iguales (EQH/EQL): dos swings consecutivos del mismo tipo a una distancia
- * menor que `tol` (por defecto 0.1 × ATR). Ahí se acumulan stops, es "liquidez".
- * Cada nivel dice cómo terminó: `sweptIndex` (la mecha lo pasó y el cierre volvió) o
- * `brokenIndex` (cerró más allá). Si ambos son null, sigue vivo.
+ * Equal highs/lows (EQH/EQL): two consecutive swings of the same type closer than
+ * `tol` (default 0.1 × ATR). Stops pile up there; it is "liquidity".
+ * Each level says how it ended: `sweptIndex` (the wick went through and the close came back) or
+ * `brokenIndex` (closed beyond). If both are null, it is still alive.
  */
 export function detectEqualLevels(bars, pivots, opts = {}) {
   const a = atr(bars, opts.atrPeriod ?? 14);
@@ -151,29 +151,29 @@ export function detectEqualLevels(bars, pivots, opts = {}) {
 }
 
 /**
- * Barridos de liquidez: la mecha supera un swing high (o pierde un swing low) pero la vela
- * CIERRA de vuelta dentro. Cada swing da como mucho un barrido (la primera vez que se supera).
- * Si en cambio cierra más allá, es una ruptura (BOS/CHoCH) y no se marca aquí.
+ * Liquidity sweeps: the wick goes above a swing high (or below a swing low) but the candle
+ * CLOSES back inside. Each swing yields at most one sweep (the first time it is exceeded).
+ * If it closes beyond instead, it is a break (BOS/CHoCH) and is not marked here.
  *
- * Dos matices para no confundir la lectura:
- *  - La vela que FORMA un swing casi igual al anterior (misma tolerancia que EQH/EQL) no cuenta
- *    como barrido: eso es la formación de un EQH, no una toma de liquidez.
- *  - Si una misma vela barre varios swings a la vez, se marca una sola vez (con el nivel más extremo).
+ * Two nuances to avoid misreading:
+ *  - The candle that FORMS a swing nearly equal to the previous one (same tolerance as EQH/EQL) does not
+ *    count as a sweep: that is an EQH forming, not a liquidity grab.
+ *  - If one candle sweeps several swings at once, it is marked only once (with the most extreme level).
  */
 export function detectSweeps(bars, pivots, opts = {}) {
   const a = atr(bars, opts.atrPeriod ?? 14);
   const tolAtr = opts.tolAtr ?? 0.1;
   const pivotAt = new Map(pivots.map((q) => [`${q.type}:${q.index}`, q]));
-  const found = new Map(); // `${dir}:${index}` -> barrido (se queda el más extremo)
+  const found = new Map(); // `${dir}:${index}` -> sweep (keeps the most extreme)
 
   for (const p of pivots) {
     const isHigh = p.type === 'high';
     for (let j = p.confirmedIndex + 1; j < bars.length; j++) {
       const pierced = isHigh ? bars[j].high > p.price : bars[j].low < p.price;
       if (!pierced) continue;
-      const q = pivotAt.get(`${p.type}:${j}`); // ¿esta vela es ella misma un swing del mismo tipo?
+      const q = pivotAt.get(`${p.type}:${j}`); // is this candle itself a swing of the same type?
       const tol = opts.tol ?? tolAtr * a[j];
-      if (q && q.index > p.index && Math.abs(q.price - p.price) <= tol) continue; // formación de EQH/EQL
+      if (q && q.index > p.index && Math.abs(q.price - p.price) <= tol) continue; // EQH/EQL forming
       const closedBeyond = isHigh ? bars[j].close > p.price : bars[j].close < p.price;
       if (!closedBeyond) {
         const sw = { dir: isHigh ? 'high' : 'low', level: p.price, pivotIndex: p.index, pivotTime: p.time, index: j, time: bars[j].time };

@@ -23,7 +23,7 @@ button { cursor: pointer; }
 .muted { color: var(--muted); }
 .spacer, .grow { flex: 1; }
 
-/* ---- barra superior ---- */
+/* ---- top bar ---- */
 .topbar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 8px 12px; background: #11161e; border-bottom: 1px solid var(--line);
@@ -71,7 +71,7 @@ select { background: #0b0f14; border: 1px solid var(--line); border-radius: 5px;
 .dot.bad { background: var(--down); }
 .dot.mock { background: var(--warn); }
 
-/* ---- favoritos ---- */
+/* ---- favorites ---- */
 .favbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px; border-bottom: 1px solid var(--line); background: #0d1218; }
 .fav { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: #131a24; }
 .fav.on { border-color: var(--accent); }
@@ -80,7 +80,7 @@ select { background: #0b0f14; border: 1px solid var(--line); border-radius: 5px;
 .fav-main { font-weight: 600; }
 .fav-x { color: var(--muted); padding: 3px 6px; }
 
-/* ---- grid de paneles ---- */
+/* ---- panel grid ---- */
 .grid {
   flex: 1; min-height: 0; display: grid; gap: 2px; padding: 2px; background: var(--line);
 }
@@ -124,7 +124,7 @@ select { background: #0b0f14; border: 1px solid var(--line); border-radius: 5px;
   padding: 8px 14px; border-radius: 8px; background: #1d2635; border: 1px solid var(--line); box-shadow: 0 8px 24px #0009;
 }
 
-/* ---- menú de indicadores ---- */
+/* ---- indicators menu ---- */
 .menu-wrap { position: relative; }
 .menu {
   position: absolute; z-index: 60; top: calc(100% + 6px); right: 0; width: 290px; padding: 8px;
@@ -138,7 +138,7 @@ select { background: #0b0f14; border: 1px solid var(--line); border-radius: 5px;
 .menu-clear { width: 100%; margin-top: 8px; }
 .p-note { color: var(--warn); font-size: 11px; }
 
-/* ---- botones ? y guía ---- */
+/* ---- ? buttons and guide ---- */
 .help-q {
   width: 16px; height: 16px; padding: 0; margin-left: 4px; border-radius: 50%; flex: none;
   background: #1a2230; border: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 700; line-height: 1;
@@ -172,7 +172,7 @@ body.help-open { padding-right: 440px; }
 @keyframes flash { from { box-shadow: 0 0 0 2px var(--accent); background: #16202f; } to { box-shadow: 0 0 0 0 transparent; } }
 @media (max-width: 900px) { body.help-open { padding-right: 0; } .help { width: 100vw; } }
 
-/* ---- ejemplos dentro de la guía ---- */
+/* ---- examples inside the guide ---- */
 .help-example { margin-top: 14px; padding: 10px 12px 12px; border-radius: 8px; background: #0b1017; border: 1px solid #22304a; }
 .help-example .ex-h { margin-top: 0; color: #7dd3fc; }
 .ex-title { font-weight: 700; font-size: 13px; margin: 2px 0 6px; color: #e6edf6; }
