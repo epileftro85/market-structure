@@ -2,11 +2,10 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config, TIMEFRAMES, SUPPORTED_SEC_TYPES } from './config.js';
-import { IBClient } from './ib.js';
-import { MockClient } from './mock.js';
+import { createProvider } from './providers.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const provider = config.mock ? new MockClient() : new IBClient();
+const provider = createProvider();
 provider.connect();
 
 const app = express();
@@ -18,13 +17,16 @@ app.use('/vendor', express.static(path.join(root, 'node_modules/lightweight-char
 
 const SAFE = /^[A-Za-z0-9 .\-_]{0,24}$/;
 
+// Error codes keep their historical `ib_` names so the frontend stays provider-agnostic.
 function sendError(res, e) {
-  if (e.ibCode === 'NOT_CONNECTED' || e.ibCode === 'DISCONNECTED') {
+  const code = e.code ?? e.ibCode;
+  if (code === 'NOT_CONNECTED' || code === 'DISCONNECTED') {
     return res.status(503).json({ error: 'ib_not_connected', message: e.message });
   }
-  if (e.ibCode === 'TIMEOUT') return res.status(504).json({ error: 'timeout', message: e.message });
-  console.warn('[api]', e.ibCode ?? '', e.message);
-  return res.status(502).json({ error: 'ib_error', code: e.ibCode ?? null, message: e.message });
+  if (code === 'TIMEOUT') return res.status(504).json({ error: 'timeout', message: e.message });
+  if (code === 'UNSUPPORTED') return res.status(422).json({ error: 'unsupported', message: e.message });
+  console.warn('[api]', code ?? '', e.message);
+  return res.status(502).json({ error: 'ib_error', code: code ?? null, message: e.message });
 }
 
 app.get('/api/status', (_req, res) => res.json({ ...provider.status(), timeframes: Object.keys(TIMEFRAMES), lang: config.lang }));
@@ -53,7 +55,12 @@ app.get('/api/bars', async (req, res) => {
 
 const server = app.listen(config.port, config.host, () => {
   console.log(`\n  market-structure → http://${config.host}:${config.port}`);
-  console.log(config.mock ? '  MOCK mode (simulated data)\n' : `  IB at ${config.ib.host}:${config.ib.port}  (clientId ${config.ib.clientId})\n`);
+  const where = {
+    mock: 'MOCK mode (simulated data)',
+    ibkr: `IBKR at ${config.ib.host}:${config.ib.port}  (clientId ${config.ib.clientId})`,
+    alpaca: `Alpaca market data (${config.alpaca.paper ? 'paper' : 'live'} keys, feed ${config.alpaca.feed})`,
+  }[config.provider];
+  console.log(`  ${where}\n`);
 });
 
 function shutdown() {

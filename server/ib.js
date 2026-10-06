@@ -241,7 +241,10 @@ export class IBClient {
   }
 
   status() {
-    return { connected: this.ready, mock: false, host: config.ib.host, port: config.ib.port, lastError: this.lastError };
+    return {
+      connected: this.ready, mock: false, provider: 'IBKR',
+      target: `${config.ib.host}:${config.ib.port}`, host: config.ib.host, port: config.ib.port, lastError: this.lastError,
+    };
   }
 
   shutdown() {
