@@ -1,0 +1,20 @@
+{
+  "name": "market-structure",
+  "version": "0.1.0",
+  "description": "MVP: marcador de estructura de mercado (HH/HL/LH/LL, BOS, CHoCH) con datos de Interactive Brokers",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "mock": "MOCK=1 node server/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@stoqey/ib": "^1.6.12",
+    "express": "^5.2.1",
+    "lightweight-charts": "^5.2.1"
+  }
+}

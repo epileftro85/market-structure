@@ -1,0 +1,65 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { HELP, GROUPS, DIAGRAMS, helpKeyFor } from '../public/js/help.js';
+import { EXAMPLES } from '../public/js/examples.js';
+
+// Claves de indicadores del menú (deben coincidir con IND_KEYS de app.js)
+const IND_KEYS = ['fvg', 'ob', 'eq', 'sweep', 'ext', 'htf', 'ema50', 'ema200', 'vwap', 'vol'];
+
+test('cada indicador del menú tiene su entrada de guía', () => {
+  const keys = new Set(HELP.map((h) => h.key));
+  for (const k of IND_KEYS) assert.ok(keys.has(helpKeyFor(k)), `falta guía para ${k}`);
+  for (const k of ['swings', 'bos', 'choch']) assert.ok(keys.has(k), `falta guía para ${k}`);
+});
+
+test('las entradas están completas y bien formadas', () => {
+  const seen = new Set();
+  for (const h of HELP) {
+    assert.ok(!seen.has(h.key), `clave repetida ${h.key}`);
+    seen.add(h.key);
+    assert.ok(GROUPS.includes(h.group), `${h.key}: grupo desconocido ${h.group}`);
+    assert.match(h.color, /^#[0-9a-f]{6}$/i);
+    assert.ok(typeof h.title === 'string' && h.title.length >= 3, `${h.key}.title`);
+    for (const f of ['what', 'practice', 'caveat']) assert.ok(typeof h[f] === 'string' && h[f].length > 20, `${h.key}.${f}`);
+    for (const f of ['read', 'rules']) assert.ok(Array.isArray(h[f]) && h[f].length > 0, `${h.key}.${f}`);
+    if (h.diagram) assert.ok(typeof DIAGRAMS[h.diagram] === 'function', `${h.key}: diagrama inexistente`);
+  }
+});
+
+test('los interruptores de la guía apuntan a claves válidas', () => {
+  for (const h of HELP) {
+    for (const t of h.toggles ?? []) assert.ok([...IND_KEYS, '@sw', '@st'].includes(t.k), `${h.key}: toggle ${t.k}`);
+  }
+});
+
+test('los diagramas son SVG válidos y sin scripts', () => {
+  for (const [k, draw] of Object.entries(DIAGRAMS)) {
+    const out = draw();
+    assert.ok(out.startsWith('<svg') && out.endsWith('</svg>'), k);
+    assert.ok(!/<script|onerror|onload/i.test(out), k);
+    assert.ok(!out.includes('NaN') && !out.includes('undefined'), `${k}: coordenadas inválidas`);
+  }
+});
+
+test('cada entrada de la guía tiene un ejemplo completo', () => {
+  for (const h of HELP) {
+    const ex = EXAMPLES[h.key];
+    assert.ok(ex, `${h.key}: falta ejemplo`);
+    assert.ok(ex.title && ex.scenario.length > 40, `${h.key}: título/escenario`);
+    assert.ok(ex.outcomes?.length >= 2, `${h.key}: necesita al menos 2 escenarios`);
+    for (const o of ex.outcomes) for (const f of ['title', 'when', 'means', 'check']) assert.ok(o[f]?.length > 5, `${h.key}.outcomes.${f}`);
+    assert.ok(ex.measure?.length >= 2, `${h.key}: qué medir`);
+    assert.ok(ex.mistakes?.length >= 2, `${h.key}: errores comunes`);
+    for (const d of ex.diagrams ?? []) {
+      assert.ok(typeof DIAGRAMS[d.key] === 'function', `${h.key}: diagrama ${d.key} inexistente`);
+      assert.ok(d.caption?.length > 10, `${h.key}: leyenda de ${d.key}`);
+    }
+  }
+  for (const k of Object.keys(EXAMPLES)) assert.ok(HELP.some((h) => h.key === k), `ejemplo huérfano ${k}`);
+});
+
+test('EQH: ejemplo profundo con los 4 diagramas y los escenarios clave', () => {
+  const eq = EXAMPLES.eq;
+  assert.deepEqual(eq.diagrams.map((d) => d.key), ['eq_form', 'eq_sweep', 'eq_break', 'eq_measure']);
+  assert.ok(eq.outcomes.length >= 4 && eq.measure.length >= 6 && eq.steps.length >= 4);
+});

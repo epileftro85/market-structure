@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estructura de mercado</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="search">
+      <input id="q" type="search" placeholder="Buscar símbolo (AAPL, SPY…)" autocomplete="off" spellcheck="false" aria-label="Buscar símbolo">
+      <ul id="results" class="results" hidden></ul>
+    </div>
+
+    <div class="current">
+      <button id="favBtn" class="icon-btn" title="Guardar / quitar de favoritos" aria-label="Favorito" disabled>☆</button>
+      <strong id="curSymbol">—</strong>
+      <span id="curName" class="muted"></span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div id="tfChips" class="chips" role="group" aria-label="Temporalidades"></div>
+    <button id="layoutBtn" class="btn" title="Cambiar layout: 4 → 2 → 1 (tecla L)">Layout 4</button>
+
+    <label class="chk"><input id="swChk" type="checkbox" checked> HH/HL/LH/LL <button type="button" class="help-q" data-help="swings" title="¿Qué son los swings?">?</button></label>
+    <label class="chk"><input id="stChk" type="checkbox" checked> BOS/CHoCH <button type="button" class="help-q" data-help="bos" title="¿Qué son BOS y CHoCH?">?</button></label>
+    <button id="helpBtn" class="btn" data-help="" title="Guía: qué es cada marca y cómo se calcula">? Guía</button>
+    <div class="menu-wrap">
+      <button id="indBtn" class="btn" aria-haspopup="true">Indicadores ▾</button>
+      <div id="indMenu" class="menu" hidden></div>
+    </div>
+    <label class="sel" title="Cómo se considera rota una estructura">
+      Ruptura
+      <select id="brkSel"><option value="close">por cierre</option><option value="wick">por mecha</option></select>
+    </label>
+
+    <label class="chk" title="Refrescar cada 60 s (el servidor cachea para no saturar IB)"><input id="autoChk" type="checkbox" checked> Auto</label>
+    <button id="refreshBtn" class="icon-btn" title="Refrescar ahora" aria-label="Refrescar">⟳</button>
+    <button id="dupBtn" class="btn" title="Abrir esta misma vista en una pestaña nueva">Duplicar pestaña ↗</button>
+    <span id="statusDot" class="dot" title="Conectando…"></span>
+  </header>
+
+  <nav id="favBar" class="favbar" aria-label="Favoritos"></nav>
+
+  <main id="grid" class="grid" data-layout="4"></main>
+  <aside id="help" class="help" hidden aria-label="Guía de indicadores"></aside>
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
