@@ -3,6 +3,7 @@ import { fetchBars } from './api.js';
 import { detectStructure } from './structure.js';
 import { detectFVG, detectOrderBlocks, detectEqualLevels, detectSweeps, ema, vwapDaily } from './indicators.js';
 import { StructurePrimitive } from './structurePrimitive.js';
+import { LANG, t } from './i18n.js';
 
 /** La estructura externa usa un `n` este número de veces mayor que la interna. */
 export const EXT_FACTOR = 3;
@@ -48,18 +49,18 @@ export class Panel {
     el.dataset.tf = tf;
     el.innerHTML = `
       <header class="panel-head">
-        <button class="tf-btn" title="Clic: elegir esta temporalidad · Doble clic: maximizar"></button>
+        <button class="tf-btn" title="${t('panel.tfBtn')}"></button>
         <span class="p-symbol"></span>
         <span class="p-trend"></span>
         <span class="p-note"></span>
         <span class="grow"></span>
-        <label class="n-ctl" title="Velas a cada lado para confirmar un swing (mayor = menos ruido, más retraso)">
+        <label class="n-ctl" title="${t('panel.nTitle')}">
           <span>n</span>
-          <button class="step" data-d="-1" aria-label="Menos">−</button>
+          <button class="step" data-d="-1" aria-label="${t('panel.less')}">−</button>
           <output class="n-val"></output>
-          <button class="step" data-d="1" aria-label="Más">+</button>
+          <button class="step" data-d="1" aria-label="${t('panel.more')}">+</button>
         </label>
-        <button class="help-q" data-help="swings" title="¿Qué es n? (guía)">?</button>
+        <button class="help-q" data-help="swings" title="${t('panel.nHelp')}">?</button>
       </header>
       <div class="chart"></div>
       <div class="panel-msg" hidden></div>`;
@@ -86,7 +87,7 @@ export class Panel {
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: { borderColor: THEME.border, scaleMargins: { top: 0.12, bottom: 0.12 } },
       timeScale: { borderColor: THEME.border, timeVisible: tf !== '1D', secondsVisible: false, rightOffset: 6 },
-      localization: { locale: 'es' },
+      localization: { locale: LANG },
     });
     this.series = this.chart.addSeries(CandlestickSeries, {
       upColor: THEME.up, downColor: THEME.down,
@@ -183,7 +184,7 @@ export class Panel {
     this.msgEl.textContent = text;
     if (retry) {
       const b = document.createElement('button');
-      b.textContent = 'Reintentar';
+      b.textContent = t('panel.retry');
       b.addEventListener('click', retry);
       this.msgEl.append(document.createElement('br'), b);
     }
@@ -221,7 +222,7 @@ export class Panel {
     const ctrl = (this.abort = new AbortController());
     if (isNew) {
       this.clearData();
-      this.setMessage('Cargando…');
+      this.setMessage(t('panel.loading'));
     }
     try {
       const bars = await fetchBars(contract, this.tf, ctrl.signal);
@@ -229,11 +230,11 @@ export class Panel {
       this.applyBars(bars, isNew);
       this.loadedKey = key;
       this.loadedAt = Date.now();
-      this.setMessage(bars.length ? '' : 'IB no devolvió velas para este símbolo/temporalidad.', { error: !bars.length });
+      this.setMessage(bars.length ? '' : t('panel.noBars'), { error: !bars.length });
     } catch (e) {
       if (e.name === 'AbortError') return;
       if (isNew || !this.bars.length) this.setMessage(e.message, { error: true, retry: () => this.load(contract, { force: true }) });
-      else this.trendEl.title = `Último refresco falló: ${e.message}`;
+      else this.trendEl.title = t('panel.refreshFailed', { msg: e.message });
     }
   }
 
@@ -268,11 +269,11 @@ export class Panel {
 
     const last = this.result.breaks[this.result.breaks.length - 1];
     if (!this.result.trend) {
-      this.trendEl.textContent = 'sin tendencia definida';
+      this.trendEl.textContent = t('panel.noTrend');
       this.trendEl.className = 'p-trend';
     } else {
       const up = this.result.trend === 'bull';
-      this.trendEl.textContent = `${up ? '▲ alcista' : '▼ bajista'} · último ${last.kind}`;
+      this.trendEl.textContent = `${t(up ? 'panel.bull' : 'panel.bear')} · ${t('panel.last', { kind: last.kind })}`;
       this.trendEl.className = 'p-trend ' + (up ? 'up' : 'down');
     }
     this.trendEl.title = '';
@@ -298,9 +299,9 @@ export class Panel {
     );
     const hasVolume = bars.some((b) => b.volume > 0);
     const notes = [];
-    if ((on('vol') || on('vwap')) && !hasVolume) notes.push('sin volumen en este instrumento');
-    else if (on('vwap') && this.tf === '1D') notes.push('VWAP no aplica en 1D');
-    if (on('ema200') && bars.length < 200) notes.push(`EMA200 necesita 200 velas (hay ${bars.length})`);
+    if ((on('vol') || on('vwap')) && !hasVolume) notes.push(t('panel.noVolume'));
+    else if (on('vwap') && this.tf === '1D') notes.push(t('panel.vwap1D'));
+    if (on('ema200') && bars.length < 200) notes.push(t('panel.ema200', { n: bars.length }));
     this.noteEl.textContent = notes.join(' · ');
   }
 

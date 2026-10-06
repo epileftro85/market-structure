@@ -3,7 +3,7 @@
 Contexto para cualquier IA (o persona) que trabaje en este repositorio. Léelo completo antes de cambiar nada.
 Idioma de trabajo con el usuario: **español**. Identificadores de código, comentarios técnicos breves y nombres de archivo: como ya están en el repo.
 
-Última actualización: 2026-10-06.
+Última actualización: 2026-10-06 (i18n es/en).
 
 ---
 
@@ -82,7 +82,7 @@ IB Gateway / TWS (local)  ──socket TCP──▶  Servidor Node (Express)  �
   `node_modules` en `/vendor`, sin CDN). Sin build step.
 - **Un solo servidor, una sola conexión a IB**, compartida por todas las pestañas. Escucha solo en `127.0.0.1`.
 - Estado de cada pestaña **en la URL** (símbolo, layout, `n` por panel, modo de ruptura, indicadores). "Duplicar pestaña" copia la URL.
-- Cookies: `ms_favs` (favoritos) y `ms_ind` (último uso de indicadores). Son del **host** `127.0.0.1` (no dependen del puerto): si el usuario abre la app como `localhost`, no verá las mismas cookies.
+- Cookies: `ms_favs` (favoritos), `ms_ind` (último uso de indicadores) y `ms_lang` (idioma elegido con el botón ES/EN). Son del **host** `127.0.0.1` (no dependen del puerto): si el usuario abre la app como `localhost`, no verá las mismas cookies.
 
 ```
 server/
@@ -99,9 +99,18 @@ public/
   js/indicators.js          ATR, EMA, VWAP, FVG, OB, EQH/EQL, Sweeps ← PURO, con tests
   js/structurePrimitive.js  dibujo sobre el canvas del gráfico (zonas abajo, marcas arriba)
   js/help.js · js/examples.js   contenido de la guía y de los ejemplos (solo datos) + diagramas SVG
+  js/help.en.js · js/examples.en.js   la misma guía y ejemplos en inglés (mismas claves)
+  js/i18n.js · js/locales/{es,en}.js   idioma activo, t('clave') y textos de la interfaz
   js/api.js · js/favorites.js   cliente del backend / cookie de favoritos
 test/                       node:test (structure, indicators, forex, help)
 ```
+
+**Idiomas (i18n)**: español (por defecto) e inglés. `public/js/i18n.js` decide el idioma al cargar: cookie `ms_lang`
+(botón ES/EN de la barra) o, si no hay, `lang` de `server/config.js` (`APP_LANG`), que llega por `/api/status`.
+Todo texto de interfaz nuevo va como clave en `locales/es.js` **y** `locales/en.js` (un test compara las claves) y se usa con `t('clave')`;
+en el HTML estático, con `data-i18n` / `data-i18n-title` / `data-i18n-placeholder` / `data-i18n-aria-label`.
+Las etiquetas de mercado (HH, BOS, CHoCH, FVG, OB, sweep…) no se traducen. Los errores que manda IB se muestran tal cual.
+Ojo: no nombres `t` a una variable local en `app.js` / `panel.js` (taparía la función de traducción).
 
 Flujo de datos: `app.js` pide barras por panel → `api.js` normaliza (tiempo desplazado a hora de Nueva York) →
 `panel.js` llama a `detectStructure` e indicadores → `structurePrimitive.js` dibuja.
@@ -117,14 +126,14 @@ npm run mock     # datos simulados, sin IB
 npm test         # node --test  (debe pasar completo antes de entregar cualquier cambio)
 ```
 
-Variables de entorno útiles: `IB_PORT`, `IB_HOST`, `IB_CLIENT_ID` (17), `PORT` (3000), `USE_RTH=0` (incluye pre/post), `MOCK=1`.
+Variables de entorno útiles: `IB_PORT`, `IB_HOST`, `IB_CLIENT_ID` (17), `PORT` (3000), `USE_RTH=0` (incluye pre/post), `MOCK=1`, `APP_LANG=en` (idioma por defecto; `es` si no se indica).
 Puertos de IB: Gateway live 4001 / paper 4002; TWS live 7496 / paper 7497.
 
 ---
 
 ## 6. Definiciones y decisiones que NO deben cambiar sin avisar
 
-Si cambias una regla, actualiza a la vez: el código, `help.js`, `examples.js`, el README y los tests.
+Si cambias una regla, actualiza a la vez: el código, `help.js`, `examples.js` (y sus versiones `.en.js`), el README y los tests.
 
 **Estructura (`structure.js`)**
 - Swing high: máximo mayor que las `n` velas anteriores (estricto) y `≥` las `n` posteriores. Swing low: simétrico.
@@ -199,7 +208,7 @@ Si el usuario reporta un error de IB, pídele el mensaje exacto (código y texto
 ## 11. Reglas para cambiar código
 
 1. Mantén la lógica de detección **pura** (sin DOM ni Node) para poder testearla.
-2. Todo indicador nuevo: función pura + tests en `test/`, entrada en `help.js` **y** `examples.js` (hay tests que exigen que ambas existan y estén completas),
+2. Todo indicador nuevo: función pura + tests en `test/`, entrada en `help.js` **y** `examples.js` y en sus versiones `.en.js` (hay tests que exigen que existan, estén completas y tengan la misma forma en ambos idiomas),
    interruptor en el menú, clave en `IND_KEYS` de `app.js` (y la copia de esa lista en `test/help.test.js`), y fila en la tabla del README.
 3. Corre `npm test` antes de entregar. Si tocas la interfaz, pruébala en un navegador headless con `npm run mock` y mira una captura.
 4. No cambies `server/config.js` (puerto, clientId) sin preguntar: el usuario lo ajustó a su entorno.

@@ -24,6 +24,10 @@ MVP para **aprender a marcar estructura de mercado** (no para operar): trae vela
 3. Abre <http://127.0.0.1:3000>.
 
 **Sin IB** (para probar la interfaz con datos simulados): `npm run mock`.
+
+**Idioma / Language.** La interfaz y la guía están en español e inglés. El idioma por defecto se define en
+`server/config.js` (`lang`, o `APP_LANG=en npm start`); cada navegador puede cambiarlo con el selector **ES/EN** de la barra
+(se guarda en la cookie `ms_lang` y recarga la página sin perder la vista).
 Tests de la lógica de estructura: `npm test`.
 
 ## Uso
@@ -64,7 +68,8 @@ El `n` correcto depende de la temporalidad y de tu criterio: si ves demasiado ru
 
 ```
 server/   config.js · ib.js (cliente IB, caché, pacing) · forex.js · mock.js · index.js (Express)
-public/   index.html · css/ · js/ (app, panel, structure, indicators, help, examples, structurePrimitive, favorites, api)
+public/   index.html · css/ · js/ (app, panel, structure, indicators, help, examples, structurePrimitive, favorites, api, i18n)
+          js/locales/ (es, en: textos de la interfaz) · help.en.js · examples.en.js (guía en inglés)
 test/     structure.test.js · indicators.test.js · forex.test.js · help.test.js
 ```
 
@@ -77,7 +82,7 @@ Todos están **apagados por defecto**. Se guardan en la URL (así "Duplicar pest
 y al lado del `n` de cada panel) y hay un botón **? Guía** en la barra superior. Abre un panel lateral con un diagrama,
 qué es, cómo leerlo, la regla exacta que aplica la app, qué practicar y sus límites. Desde la guía también puedes
 encender o apagar el indicador sin cerrarla; los gráficos se reajustan para seguir viéndose. `Esc` cierra.
-El contenido está en `public/js/help.js`.
+El contenido está en `public/js/help.js` y `examples.js` (en inglés: `help.en.js` y `examples.en.js`).
 
 Cada entrada de la guía incluye un **ejemplo paso a paso** con números ilustrativos: la situación, qué hacer en la app,
 los escenarios posibles ("si pasa A → cómo leerlo → qué comprobar"), qué medir y errores comunes. **EQH/EQL** tiene el

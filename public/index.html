@@ -10,43 +10,44 @@
 <body>
   <header class="topbar">
     <div class="search">
-      <input id="q" type="search" placeholder="Buscar símbolo (AAPL, SPY…)" autocomplete="off" spellcheck="false" aria-label="Buscar símbolo">
+      <input id="q" type="search" placeholder="Buscar símbolo (AAPL, SPY…)" autocomplete="off" spellcheck="false" aria-label="Buscar símbolo" data-i18n-placeholder="search.placeholder" data-i18n-aria-label="search.aria">
       <ul id="results" class="results" hidden></ul>
     </div>
 
     <div class="current">
-      <button id="favBtn" class="icon-btn" title="Guardar / quitar de favoritos" aria-label="Favorito" disabled>☆</button>
+      <button id="favBtn" class="icon-btn" title="Guardar / quitar de favoritos" aria-label="Favorito" data-i18n-title="fav.toggle" data-i18n-aria-label="fav.aria" disabled>☆</button>
       <strong id="curSymbol">—</strong>
       <span id="curName" class="muted"></span>
     </div>
 
     <div class="spacer"></div>
 
-    <div id="tfChips" class="chips" role="group" aria-label="Temporalidades"></div>
-    <button id="layoutBtn" class="btn" title="Cambiar layout: 4 → 2 → 1 (tecla L)">Layout 4</button>
+    <div id="tfChips" class="chips" role="group" aria-label="Temporalidades" data-i18n-aria-label="tf.group"></div>
+    <button id="layoutBtn" class="btn" title="Cambiar layout: 4 → 2 → 1 (tecla L)" data-i18n-title="layout.title">Layout 4</button>
 
-    <label class="chk"><input id="swChk" type="checkbox" checked> HH/HL/LH/LL <button type="button" class="help-q" data-help="swings" title="¿Qué son los swings?">?</button></label>
-    <label class="chk"><input id="stChk" type="checkbox" checked> BOS/CHoCH <button type="button" class="help-q" data-help="bos" title="¿Qué son BOS y CHoCH?">?</button></label>
-    <button id="helpBtn" class="btn" data-help="" title="Guía: qué es cada marca y cómo se calcula">? Guía</button>
+    <label class="chk"><input id="swChk" type="checkbox" checked> HH/HL/LH/LL <button type="button" class="help-q" data-help="swings" title="¿Qué son los swings?" data-i18n-title="top.swingsHelp">?</button></label>
+    <label class="chk"><input id="stChk" type="checkbox" checked> BOS/CHoCH <button type="button" class="help-q" data-help="bos" title="¿Qué son BOS y CHoCH?" data-i18n-title="top.bosHelp">?</button></label>
+    <button id="helpBtn" class="btn" data-help="" title="Guía: qué es cada marca y cómo se calcula" data-i18n-title="guide.btnTitle" data-i18n="guide.btn">? Guía</button>
     <div class="menu-wrap">
       <button id="indBtn" class="btn" aria-haspopup="true">Indicadores ▾</button>
       <div id="indMenu" class="menu" hidden></div>
     </div>
-    <label class="sel" title="Cómo se considera rota una estructura">
-      Ruptura
-      <select id="brkSel"><option value="close">por cierre</option><option value="wick">por mecha</option></select>
+    <label class="sel" title="Cómo se considera rota una estructura" data-i18n-title="brk.title">
+      <span data-i18n="brk.label">Ruptura</span>
+      <select id="brkSel"><option value="close" data-i18n="brk.close">por cierre</option><option value="wick" data-i18n="brk.wick">por mecha</option></select>
     </label>
 
-    <label class="chk" title="Refrescar cada 60 s (el servidor cachea para no saturar IB)"><input id="autoChk" type="checkbox" checked> Auto</label>
-    <button id="refreshBtn" class="icon-btn" title="Refrescar ahora" aria-label="Refrescar">⟳</button>
-    <button id="dupBtn" class="btn" title="Abrir esta misma vista en una pestaña nueva">Duplicar pestaña ↗</button>
-    <span id="statusDot" class="dot" title="Conectando…"></span>
+    <label class="chk" title="Refrescar cada 60 s (el servidor cachea para no saturar IB)" data-i18n-title="auto.title"><input id="autoChk" type="checkbox" checked> Auto</label>
+    <button id="refreshBtn" class="icon-btn" title="Refrescar ahora" aria-label="Refrescar" data-i18n-title="refresh.title" data-i18n-aria-label="refresh.aria">⟳</button>
+    <button id="dupBtn" class="btn" title="Abrir esta misma vista en una pestaña nueva" data-i18n-title="dup.title" data-i18n="dup.label">Duplicar pestaña ↗</button>
+    <select id="langSel" class="lang" title="Idioma" data-i18n-title="lang.title" aria-label="Idioma" data-i18n-aria-label="lang.title"><option value="es">ES</option><option value="en">EN</option></select>
+    <span id="statusDot" class="dot" title="Conectando…" data-i18n-title="status.connecting"></span>
   </header>
 
-  <nav id="favBar" class="favbar" aria-label="Favoritos"></nav>
+  <nav id="favBar" class="favbar" aria-label="Favoritos" data-i18n-aria-label="fav.bar"></nav>
 
   <main id="grid" class="grid" data-layout="4"></main>
-  <aside id="help" class="help" hidden aria-label="Guía de indicadores"></aside>
+  <aside id="help" class="help" hidden aria-label="Guía de indicadores" data-i18n-aria-label="guide.title"></aside>
   <div id="toast" class="toast" hidden></div>
 
   <script type="module" src="/js/app.js"></script>

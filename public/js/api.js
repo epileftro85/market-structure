@@ -4,6 +4,8 @@
 // (y no UTC) desplazamos cada vela por el offset de la zona horaria de visualización.
 // Es solo cosmético: el precio y el orden no cambian.
 
+import { t } from './i18n.js';
+
 export const DISPLAY_TZ = 'America/New_York';
 
 const fmt = new Intl.DateTimeFormat('en-US', {
@@ -31,11 +33,13 @@ async function getJSON(url, signal) {
     res = await fetch(url, { signal });
   } catch (e) {
     if (e.name === 'AbortError') throw e;
-    throw new Error('No se pudo contactar al servidor local');
+    throw new Error(t('err.server'));
   }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(body.message || `Error ${res.status}`);
+    // Los mensajes propios del servidor se traducen por código; los de IB se muestran tal cual
+    const own = { ib_not_connected: 'err.notConnected', bad_request: 'err.badRequest' }[body.error];
+    const err = new Error(own ? t(own) : body.message || t('err.http', { status: res.status }));
     err.status = res.status;
     err.code = body.error;
     throw err;
