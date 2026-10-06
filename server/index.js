@@ -27,7 +27,7 @@ function sendError(res, e) {
   return res.status(502).json({ error: 'ib_error', code: e.ibCode ?? null, message: e.message });
 }
 
-app.get('/api/status', (_req, res) => res.json({ ...provider.status(), timeframes: Object.keys(TIMEFRAMES) }));
+app.get('/api/status', (_req, res) => res.json({ ...provider.status(), timeframes: Object.keys(TIMEFRAMES), lang: config.lang }));
 
 app.get('/api/search', async (req, res) => {
   const q = String(req.query.q ?? '').trim();

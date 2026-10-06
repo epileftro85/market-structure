@@ -7,6 +7,8 @@ export const config = {
   port: Number(process.env.PORT) || 3000,
   host: process.env.HOST || '127.0.0.1', // solo local: no expongas esto a la red
   mock: process.env.MOCK === '1',        // datos simulados, sin IB (para probar la interfaz)
+  // Idioma por defecto de la interfaz: 'es' o 'en'. Cada navegador puede cambiarlo con el botón ES/EN (cookie ms_lang).
+  lang: process.env.APP_LANG === 'en' ? 'en' : 'es',
   ib: {
     host: process.env.IB_HOST || '127.0.0.1',
     port: Number(process.env.IB_PORT) || 4001,

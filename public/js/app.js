@@ -1,12 +1,23 @@
 import { Panel, EXT_FACTOR } from './panel.js';
 import { searchSymbols, getStatus, displayName } from './api.js';
 import { readFavs, isFav, toggleFav, removeFav } from './favorites.js';
-import { HELP, GROUPS, DIAGRAMS, helpKeyFor } from './help.js';
-import { EXAMPLES } from './examples.js';
+import { LANG, t, setLang, translateDom } from './i18n.js';
+import { HELP as HELP_ES, GROUPS, GROUP_TITLES, DIAGRAMS, helpKeyFor } from './help.js';
+import { HELP as HELP_EN } from './help.en.js';
+import { EXAMPLES as EXAMPLES_ES } from './examples.js';
+import { EXAMPLES as EXAMPLES_EN } from './examples.en.js';
+
+// Contenido de la guía en el idioma activo (ver i18n.js)
+const HELP = LANG === 'en' ? HELP_EN : HELP_ES;
+const EXAMPLES = LANG === 'en' ? EXAMPLES_EN : EXAMPLES_ES;
 
 const TFS = ['1D', '4H', '15m', '10m'];
 const LAYOUTS = [4, 2, 1];
 const $ = (id) => document.getElementById(id);
+
+translateDom();
+$('langSel').value = LANG;
+$('langSel').addEventListener('change', (e) => setLang(e.target.value));
 
 // ---------------------------------------------------------------------------
 // Estado de ESTA pestaña. Vive en la URL: duplicar la pestaña copia la vista
@@ -70,7 +81,7 @@ function urlFor(s, contractOverride) {
 function persist() {
   history.replaceState(null, '', urlFor(state));
   document.cookie = `${IND_COOKIE}=${encodeURIComponent([...state.ind].join(','))}; max-age=${60 * 60 * 24 * 365}; path=/; SameSite=Lax`;
-  document.title = state.contract ? `${displayName(state.contract)} · Estructura` : 'Estructura de mercado';
+  document.title = state.contract ? t('app.titleWith', { symbol: displayName(state.contract) }) : t('app.title');
 }
 
 function openInNewTab(contract) {
@@ -126,7 +137,7 @@ function applyLayout() {
     p.setVisible(shown.includes(p.tf));
     p.setActive(state.sel[0] === p.tf);
   });
-  $('layoutBtn').textContent = `Layout ${state.layout}`;
+  $('layoutBtn').textContent = t('layout.label', { n: state.layout });
   renderChips(shown);
   persist();
   loadVisible();
@@ -139,7 +150,7 @@ function renderChips(shown) {
     const b = document.createElement('button');
     b.className = 'chip' + (shown.includes(tf) ? ' on' : '');
     b.textContent = tf;
-    b.title = `Mostrar ${tf}`;
+    b.title = t('tf.show', { tf });
     b.addEventListener('click', () => select(tf));
     box.appendChild(b);
   }
@@ -247,23 +258,23 @@ setAuto(true);
 // Menú de indicadores (todos opcionales y apagados por defecto)
 // ---------------------------------------------------------------------------
 const IND_GROUPS = [
-  { title: 'Zonas', items: [
-    ['fvg', 'FVG', 'Fair Value Gap: hueco de 3 velas que el precio aún no cubrió', '#2ebd85'],
-    ['ob', 'Order Blocks', 'Última vela contraria antes del impulso que rompió estructura; vive hasta que un cierre la atraviesa', '#2ebd85'],
+  { title: t('ind.g.zones'), items: [
+    ['fvg', 'FVG', t('ind.fvg.tip'), '#2ebd85'],
+    ['ob', 'Order Blocks', t('ind.ob.tip'), '#2ebd85'],
   ] },
-  { title: 'Liquidez', items: [
-    ['eq', 'EQH / EQL', 'Máximos/mínimos casi iguales (tolerancia 0.1×ATR): ahí se acumulan stops', '#94a3b8'],
-    ['sweep', 'Sweeps', 'La mecha supera un swing pero la vela cierra de vuelta dentro', '#f472b6'],
+  { title: t('ind.g.liquidity'), items: [
+    ['eq', 'EQH / EQL', t('ind.eq.tip'), '#94a3b8'],
+    ['sweep', 'Sweeps', t('ind.sweep.tip'), '#f472b6'],
   ] },
-  { title: 'Estructura', items: [
-    ['ext', `Externa (n×${EXT_FACTOR})`, `Segunda escala de swings con n×${EXT_FACTOR}: etiquetas y líneas grandes sobre la estructura interna`, '#f5a524'],
-    ['htf', 'Niveles de TF mayor', 'Dibuja swing high/low vigentes y la última ruptura de las temporalidades superiores (1D morado, 4H cian)', '#c084fc'],
+  { title: t('ind.g.structure'), items: [
+    ['ext', t('ind.ext.label', { f: EXT_FACTOR }), t('ind.ext.tip', { f: EXT_FACTOR }), '#f5a524'],
+    ['htf', t('ind.htf.label'), t('ind.htf.tip'), '#c084fc'],
   ] },
-  { title: 'Contexto', items: [
+  { title: t('ind.g.context'), items: [
     ['ema50', 'EMA 50', null, '#93c5fd'],
     ['ema200', 'EMA 200', null, '#e2e8f0'],
-    ['vwap', 'VWAP (diario)', 'Se reinicia cada día; no aplica en 1D ni sin volumen (forex)', '#fbbf24'],
-    ['vol', 'Volumen', 'No existe en forex (IB entrega MIDPOINT)', '#26a69a'],
+    ['vwap', t('ind.vwap.label'), t('ind.vwap.tip'), '#fbbf24'],
+    ['vol', t('ind.vol.label'), t('ind.vol.tip'), '#26a69a'],
   ] },
 ];
 
@@ -287,21 +298,21 @@ function renderIndMenu() {
       const sw = document.createElement('i');
       sw.className = 'swatch';
       sw.style.background = color;
-      const t = document.createElement('span');
-      t.textContent = label;
+      const name = document.createElement('span');
+      name.textContent = label;
       const q = document.createElement('button');
       q.type = 'button';
       q.className = 'help-q';
       q.dataset.help = helpKeyFor(key);
-      q.title = `Guía: ${label}`;
+      q.title = t('ind.helpFor', { label });
       q.textContent = '?';
-      row.append(cb, sw, t, q);
+      row.append(cb, sw, name, q);
       menu.appendChild(row);
     }
   }
   const clear = document.createElement('button');
   clear.className = 'btn menu-clear';
-  clear.textContent = 'Apagar todos';
+  clear.textContent = t('ind.clear');
   clear.addEventListener('click', () => {
     state.ind.clear();
     applyInd(); // applyInd sincroniza todas las casillas sin re-dibujar: el menú sigue abierto
@@ -317,7 +328,7 @@ function toggleInd(key, on) {
 function applyInd() {
   panels.forEach((p) => p.setInd(state.ind));
   syncControls();
-  $('indBtn').textContent = `Indicadores${state.ind.size ? ` (${state.ind.size})` : ''} ▾`;
+  renderIndBtn();
   persist();
   loadVisible(); // por si "niveles de TF mayor" necesita cargar paneles ocultos
 }
@@ -332,8 +343,11 @@ document.addEventListener('keydown', (e) => {
   if (!$('help').hidden) closeHelp();
   else $('indMenu').hidden = true;
 });
+function renderIndBtn() {
+  $('indBtn').textContent = `${t('ind.button')}${state.ind.size ? ` (${state.ind.size})` : ''} ▾`;
+}
 renderIndMenu();
-$('indBtn').textContent = `Indicadores${state.ind.size ? ` (${state.ind.size})` : ''} ▾`;
+renderIndBtn();
 
 
 // ---------------------------------------------------------------------------
@@ -383,31 +397,31 @@ function section(h, text) {
 
 function buildExample(ex) {
   const box = el('div', 'help-example');
-  box.appendChild(el('h4', 'ex-h', 'Ejemplo paso a paso'));
+  box.appendChild(el('h4', 'ex-h', t('ex.heading')));
   box.appendChild(el('div', 'ex-title', ex.title));
   box.appendChild(el('p', 'ex-scenario', ex.scenario));
 
   for (const d of ex.diagrams ?? []) {
     const fig = el('figure', 'help-diagram');
     const holder = el('div');
-    holder.innerHTML = DIAGRAMS[d.key](); // SVG propio y estático
+    holder.innerHTML = DIAGRAMS[d.key](LANG); // SVG propio y estático
     fig.append(holder, el('figcaption', null, d.caption));
     box.appendChild(fig);
   }
 
   if (ex.steps?.length) {
-    box.appendChild(el('h5', null, 'Qué hacer'));
+    box.appendChild(el('h5', null, t('ex.steps')));
     const ol = el('ol', 'ex-steps');
     ex.steps.forEach((t) => ol.appendChild(el('li', null, t)));
     box.appendChild(ol);
   }
 
   if (ex.outcomes?.length) {
-    box.appendChild(el('h5', null, 'Qué puede pasar y cómo leerlo'));
+    box.appendChild(el('h5', null, t('ex.outcomes')));
     for (const o of ex.outcomes) {
       const card = el('div', 'ex-card');
       card.appendChild(el('div', 'ex-card-title', o.title));
-      for (const [label, text] of [['Si pasa', o.when], ['Lectura', o.means], ['Comprueba', o.check]]) {
+      for (const [label, text] of [[t('ex.when'), o.when], [t('ex.means'), o.means], [t('ex.check'), o.check]]) {
         const row = el('p');
         row.append(el('b', null, `${label}: `), document.createTextNode(text));
         card.appendChild(row);
@@ -417,36 +431,35 @@ function buildExample(ex) {
   }
 
   if (ex.measure?.length) {
-    box.appendChild(el('h5', null, 'Qué medir'));
+    box.appendChild(el('h5', null, t('ex.measure')));
     const ul = el('ul');
     ex.measure.forEach((t) => ul.appendChild(el('li', null, t)));
     box.appendChild(ul);
   }
 
   if (ex.mistakes?.length) {
-    box.appendChild(el('h5', null, 'Errores comunes'));
+    box.appendChild(el('h5', null, t('ex.mistakes')));
     const ul = el('ul', 'ex-mistakes');
     ex.mistakes.forEach((t) => ul.appendChild(el('li', null, t)));
     box.appendChild(ul);
   }
 
-  box.appendChild(el('p', 'ex-note', 'Los números de este ejemplo son ilustrativos para practicar cómo medir; no son estadísticas ni una recomendación de inversión.'));
+  box.appendChild(el('p', 'ex-note', t('ex.note')));
   return box;
 }
 
 function buildHelp() {
   const root = $('help');
   const head = el('header', 'help-head');
-  head.append(el('strong', null, 'Guía de indicadores'));
+  head.append(el('strong', null, t('guide.title')));
   const x = el('button', 'icon-btn', '×');
   x.id = 'helpClose';
-  x.title = 'Cerrar (Esc)';
+  x.title = t('guide.close');
   x.addEventListener('click', closeHelp);
   head.appendChild(x);
 
   const scroll = el('div', 'help-scroll');
-  scroll.appendChild(el('p', 'help-intro',
-    'Guía para aprender a marcar. Las definiciones son las que aplica esta app y entre traders varían. Es material educativo, no una recomendación de inversión.'));
+  scroll.appendChild(el('p', 'help-intro', t('guide.intro')));
 
   const idx = el('nav', 'help-index');
   HELP.forEach((h) => {
@@ -459,7 +472,7 @@ function buildHelp() {
   for (const group of GROUPS) {
     const entries = HELP.filter((h) => h.group === group);
     if (!entries.length) continue;
-    scroll.appendChild(el('div', 'help-group', group));
+    scroll.appendChild(el('div', 'help-group', GROUP_TITLES[LANG][group]));
     for (const h of entries) {
       const sec = el('section', 'help-sec');
       sec.id = `help-${h.key}`;
@@ -470,7 +483,7 @@ function buildHelp() {
       sec.appendChild(title);
       if (h.diagram) {
         const d = el('div', 'help-diagram');
-        d.innerHTML = DIAGRAMS[h.diagram](); // SVG propio y estático (sin datos externos)
+        d.innerHTML = DIAGRAMS[h.diagram](LANG); // SVG propio y estático (sin datos externos)
         sec.appendChild(d);
       }
       if (h.toggles?.length) {
@@ -487,14 +500,14 @@ function buildHelp() {
         sec.appendChild(row);
       }
       sec.append(
-        section('Qué es', h.what),
-        section('Cómo leerlo en el gráfico', h.read),
-        section('Cómo lo calcula esta app', h.rules),
-        section('Qué practicar', h.practice),
+        section(t('guide.what'), h.what),
+        section(t('guide.read'), h.read),
+        section(t('guide.rules'), h.rules),
+        section(t('guide.practice'), h.practice),
       );
       if (EXAMPLES[h.key]) sec.appendChild(buildExample(EXAMPLES[h.key]));
       const caveat = el('div', 'help-caveat');
-      caveat.append(el('strong', null, 'Ojo: '), document.createTextNode(h.caveat));
+      caveat.append(el('strong', null, t('guide.caveat')), document.createTextNode(h.caveat));
       sec.appendChild(caveat);
       scroll.appendChild(sec);
     }
@@ -537,7 +550,7 @@ buildHelp();
 $('favBtn').addEventListener('click', () => {
   if (!state.contract) return;
   const added = toggleFav(state.contract);
-  toast(added ? `${displayName(state.contract)} guardado en favoritos` : `${displayName(state.contract)} quitado de favoritos`);
+  toast(t(added ? 'fav.added' : 'fav.removed', { symbol: displayName(state.contract) }));
   renderCurrent();
 });
 
@@ -552,17 +565,17 @@ function renderFavBar() {
     const main = document.createElement('button');
     main.className = 'fav-main';
     main.textContent = displayName(f);
-    main.title = `${f.name || f.symbol} (${f.exchange}) — Clic: cargar aquí · Ctrl/⌘+clic: pestaña nueva`;
+    main.title = t('fav.chipTitle', { name: f.name || f.symbol, exchange: f.exchange });
     main.addEventListener('click', (e) => (e.metaKey || e.ctrlKey ? openInNewTab(f) : setContract(f)));
     const out = document.createElement('button');
     out.className = 'fav-x';
     out.textContent = '↗';
-    out.title = 'Abrir en pestaña nueva';
+    out.title = t('fav.newTab');
     out.addEventListener('click', () => openInNewTab(f));
     const del = document.createElement('button');
     del.className = 'fav-x';
     del.textContent = '×';
-    del.title = 'Quitar de favoritos';
+    del.title = t('fav.remove');
     del.addEventListener('click', () => { removeFav(f.conId); renderCurrent(); });
     chip.append(main, out, del);
     bar.appendChild(chip);
@@ -608,7 +621,7 @@ function renderResults(results, note) {
     const star = document.createElement('button');
     star.className = 'icon-btn small' + (isFav(r) ? ' on' : '');
     star.textContent = isFav(r) ? '★' : '☆';
-    star.title = 'Favorito';
+    star.title = t('fav.star');
     star.addEventListener('mousedown', (e) => e.preventDefault());
     star.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -647,7 +660,7 @@ qInput.addEventListener('input', () => {
     searchAbort = new AbortController();
     try {
       const results = await searchSymbols(q, searchAbort.signal);
-      renderResults(results, results.length ? '' : 'Sin resultados');
+      renderResults(results, results.length ? '' : t('search.none'));
     } catch (e) {
       if (e.name !== 'AbortError') renderResults([], e.message);
     }
@@ -673,13 +686,13 @@ async function pollStatus() {
     const s = await getStatus();
     dot.className = 'dot ' + (s.mock ? 'mock' : s.connected ? 'ok' : 'bad');
     dot.title = s.mock
-      ? 'Modo MOCK: datos simulados (sin IB)'
-      : s.connected ? `Conectado a IB (${s.host}:${s.port})` : `Sin conexión con IB (${s.host}:${s.port})${s.lastError ? ' · ' + s.lastError : ''}`;
+      ? t('status.mock')
+      : s.connected ? t('status.connected', s) : t('status.disconnected', s) + (s.lastError ? ' · ' + s.lastError : '');
     if (s.connected && wasConnected === false) loadVisible({ force: true }); // IB volvió: reintenta
     wasConnected = s.connected;
   } catch {
     dot.className = 'dot bad';
-    dot.title = 'El servidor local no responde';
+    dot.title = t('status.noServer');
     wasConnected = false;
   }
 }
@@ -688,11 +701,11 @@ setInterval(pollStatus, 5000);
 // ---------------------------------------------------------------------------
 let toastTimer;
 function toast(msg) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.hidden = false;
+  const box = $('toast');
+  box.textContent = msg;
+  box.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (t.hidden = true), 2200);
+  toastTimer = setTimeout(() => (box.hidden = true), 2200);
 }
 
 // Arranque
@@ -703,7 +716,7 @@ function toast(msg) {
   applyLayout();
   await pollStatus();
   if (!state.contract) {
-    panels.forEach((p) => p.setMessage('Busca un símbolo arriba para empezar'));
+    panels.forEach((p) => p.setMessage(t('app.start')));
     qInput.focus();
   }
 })();
