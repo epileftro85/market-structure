@@ -1,5 +1,5 @@
-// Proveedor simulado: permite probar toda la interfaz sin IB Gateway.
-// Genera velas con tendencias/retrocesos para que haya estructura que marcar.
+// Simulated provider: lets you test the whole UI without IB Gateway.
+// Generates candles with trends/pullbacks so there is structure to mark.
 import { TIMEFRAMES } from './config.js';
 import { matchForexPairs } from './forex.js';
 
@@ -24,7 +24,7 @@ function rng(seed) {
   };
 }
 
-// Offset de Nueva York (ms) para un instante dado
+// New York offset (ms) for a given instant
 function nyOffsetMs(utcMs) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', hour12: false,
@@ -80,7 +80,7 @@ function generateBars(conId, tf, isFx) {
   let left = 0;
   const bars = [];
   for (const t of times) {
-    if (left-- <= 0) { // cambia el "régimen" cada cierto número de velas
+    if (left-- <= 0) { // switches the "regime" every so many candles
       drift = (rand() - 0.5) * 2.4 * VOL[tf];
       left = 8 + Math.floor(rand() * 22);
     }
@@ -110,8 +110,8 @@ export class MockClient {
     return [...stocks, ...fx];
   }
   async getBars(descriptor, tf) {
-    if (!TIMEFRAMES[tf]) throw new Error('timeframe inválido');
-    await new Promise((r) => setTimeout(r, 120)); // simula latencia
+    if (!TIMEFRAMES[tf]) throw new Error('invalid timeframe');
+    await new Promise((r) => setTimeout(r, 120)); // simulates latency
     return { tf, dateOnly: tf === '1D', bars: generateBars(descriptor.conId, tf, descriptor.secType === 'CASH'), cached: false };
   }
 }

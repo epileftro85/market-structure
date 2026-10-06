@@ -2,10 +2,10 @@ import { IBApi, EventName, isNonFatalError } from '@stoqey/ib';
 import { config, TIMEFRAMES, SUPPORTED_SEC_TYPES } from './config.js';
 import { matchForexPairs, looksLikePair } from './forex.js';
 
-/** Convierte el campo `time` de IB a epoch en segundos. */
+/** Converts IB's `time` field to epoch seconds. */
 function parseIbTime(s) {
   if (/^\d{8}$/.test(s)) {
-    // Barras diarias pueden llegar como yyyymmdd (sin hora)
+    // Daily bars may arrive as yyyymmdd (no time)
     const y = +s.slice(0, 4), m = +s.slice(4, 6), d = +s.slice(6, 8);
     return { t: Date.UTC(y, m - 1, d) / 1000, dateOnly: true };
   }
@@ -14,12 +14,12 @@ function parseIbTime(s) {
   return { t: Math.floor(parsed / 1000), dateOnly: false };
 }
 
-/** Arma el Contract de IB a partir del descriptor que viene del buscador. */
+/** Builds the IB Contract from the descriptor returned by the search. */
 export function buildContract(c) {
   const base = { conId: c.conId, symbol: c.symbol, secType: c.secType, currency: c.currency };
   if (c.secType === 'STK') return { ...base, exchange: 'SMART' };
   if (c.secType === 'CASH') return { ...base, exchange: 'IDEALPRO' };
-  return { ...base, exchange: c.exchange }; // IND u otros: bolsa nativa
+  return { ...base, exchange: c.exchange }; // IND or others: native exchange
 }
 
 export class IBClient {
@@ -29,10 +29,10 @@ export class IBClient {
     this.lastError = null;
     this.nextId = 1;
     this.pending = new Map();   // reqId -> { resolve, reject, timer, data, kind }
-    this.cache = new Map();     // clave -> { at, value }
-    this.inflight = new Map();  // clave -> Promise (coalescing)
+    this.cache = new Map();     // key -> { at, value }
+    this.inflight = new Map();  // key -> Promise (coalescing)
     this.queue = Promise.resolve();
-    this.fxConIds = new Map();  // 'EUR.USD' -> conId (no cambia nunca)
+    this.fxConIds = new Map();  // 'EUR.USD' -> conId (never changes)
     this.reconnectTimer = null;
     this._wire();
   }
@@ -40,20 +40,20 @@ export class IBClient {
   _wire() {
     const ib = this.ib;
 
-    ib.on(EventName.connected, () => console.log(`[ib] socket conectado (${config.ib.host}:${config.ib.port})`));
+    ib.on(EventName.connected, () => console.log(`[ib] socket connected (${config.ib.host}:${config.ib.port})`));
 
     ib.on(EventName.nextValidId, (id) => {
       this.nextId = Math.max(this.nextId, id);
       this.ready = true;
       this.lastError = null;
-      try { ib.reqMarketDataType(config.marketDataType); } catch { /* no crítico */ }
-      console.log('[ib] listo para pedir datos');
+      try { ib.reqMarketDataType(config.marketDataType); } catch { /* not critical */ }
+      console.log('[ib] ready to request data');
     });
 
     ib.on(EventName.disconnected, () => {
-      if (this.ready) console.warn('[ib] desconectado');
+      if (this.ready) console.warn('[ib] disconnected');
       this.ready = false;
-      this._failAll(Object.assign(new Error('Conexión con IB perdida'), { ibCode: 'DISCONNECTED' }));
+      this._failAll(Object.assign(new Error('Connection to IB lost'), { ibCode: 'DISCONNECTED' }));
       this._scheduleReconnect();
     });
 
@@ -64,7 +64,7 @@ export class IBClient {
         return;
       }
       if (reqId === -1 || reqId === undefined) {
-        // Mensajes informativos (2104, 2106, 2158 = data farm OK) no son errores reales
+        // Informational messages (2104, 2106, 2158 = data farm OK) are not real errors
         if (code >= 2100 && code < 3000) return;
         this.lastError = `${code}: ${err.message}`;
         console.warn(`[ib] ${this.lastError}`);
@@ -80,8 +80,8 @@ export class IBClient {
         return;
       }
       const { t, dateOnly } = parseIbTime(String(time));
-      if (o < 0 || h < 0 || l < 0 || c < 0) return; // IB usa -1 para "sin dato"
-      p.data.push({ t, o, h, l, c, v: v > 0 ? v : 0 }); // forex (MIDPOINT) trae volumen -1
+      if (o < 0 || h < 0 || l < 0 || c < 0) return; // IB uses -1 for "no data"
+      p.data.push({ t, o, h, l, c, v: v > 0 ? v : 0 }); // forex (MIDPOINT) comes with volume -1
       p.dateOnly = dateOnly;
     });
 
@@ -129,13 +129,13 @@ export class IBClient {
 
   _request(kind, send) {
     if (!this.ready) {
-      return Promise.reject(Object.assign(new Error('No hay conexión con IB Gateway/TWS'), { ibCode: 'NOT_CONNECTED' }));
+      return Promise.reject(Object.assign(new Error('No connection to IB Gateway/TWS'), { ibCode: 'NOT_CONNECTED' }));
     }
     const reqId = this.nextId++;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         if (kind === 'bars') { try { this.ib.cancelHistoricalData(reqId); } catch { /* ignore */ } }
-        this._settle(reqId, 'reject', Object.assign(new Error('Tiempo de espera agotado esperando a IB'), { ibCode: 'TIMEOUT' }));
+        this._settle(reqId, 'reject', Object.assign(new Error('Timed out waiting for IB'), { ibCode: 'TIMEOUT' }));
       }, config.requestTimeoutMs);
       this.pending.set(reqId, { resolve, reject, timer, data: [], kind });
       try { send(reqId); } catch (e) { this._settle(reqId, 'reject', e); }
@@ -153,21 +153,21 @@ export class IBClient {
     return p;
   }
 
-  /** Serializa las peticiones históricas con una pausa entre ellas (pacing de IB). */
+  /** Serializes historical requests with a pause between them (IB pacing). */
   _enqueueHistorical(fn) {
     const run = this.queue.then(fn);
     this.queue = run.catch(() => {}).then(() => new Promise((r) => setTimeout(r, config.historicalGapMs)));
     return run;
   }
 
-  /** Resuelve el conId de un par de forex (IB no lo entrega en la búsqueda de texto). */
+  /** Resolves the conId of a forex pair (IB does not return it in the text search). */
   async _resolveForex({ pair, base, quote }) {
     if (this.fxConIds.has(pair)) return this.fxConIds.get(pair);
     const details = await this._request('details', (id) =>
       this.ib.reqContractDetails(id, { symbol: base, secType: 'CASH', exchange: 'IDEALPRO', currency: quote }),
     );
     const conId = details[0]?.contract?.conId;
-    if (!conId) throw new Error(`IB no resolvió el par ${pair}`);
+    if (!conId) throw new Error(`IB could not resolve the pair ${pair}`);
     this.fxConIds.set(pair, conId);
     return conId;
   }
@@ -180,7 +180,7 @@ export class IBClient {
       })),
     );
     const ok = settled.filter((r) => r.status === 'fulfilled').map((r) => r.value);
-    if (!ok.length && settled.length) throw settled[0].reason; // todos fallaron
+    if (!ok.length && settled.length) throw settled[0].reason; // all failed
     return ok;
   }
 
@@ -208,7 +208,7 @@ export class IBClient {
 
   async searchSymbols(pattern) {
     const q = pattern.trim().toUpperCase();
-    // "EUR.USD" o "EURUSD" no son tickers de acciones: ni se consulta esa búsqueda
+    // "EUR.USD" or "EURUSD" are not stock tickers: skip that search entirely
     const pairOnly = looksLikePair(q) && matchForexPairs(q).length > 0;
     const [stocks, fx] = await Promise.allSettled([
       pairOnly ? Promise.resolve([]) : this._searchStocks(q),

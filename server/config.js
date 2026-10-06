@@ -1,30 +1,30 @@
-// Configuración central. Todo se puede sobreescribir con variables de entorno.
+// Central configuration. Everything can be overridden with environment variables.
 //
-// Puertos típicos de IB:
+// Typical IB ports:
 //   IB Gateway  paper 4002  |  live 4001
 //   TWS         paper 7497  |  live 7496
 export const config = {
   port: Number(process.env.PORT) || 3000,
-  host: process.env.HOST || '127.0.0.1', // solo local: no expongas esto a la red
-  mock: process.env.MOCK === '1',        // datos simulados, sin IB (para probar la interfaz)
-  // Idioma por defecto de la interfaz: 'es' o 'en'. Cada navegador puede cambiarlo con el botón ES/EN (cookie ms_lang).
+  host: process.env.HOST || '127.0.0.1', // local only: do not expose this to the network
+  mock: process.env.MOCK === '1',        // simulated data, no IB (to test the UI)
+  // Default UI language: 'es' or 'en'. Each browser can switch it with the ES/EN button (cookie ms_lang).
   lang: process.env.APP_LANG === 'en' ? 'en' : 'es',
   ib: {
     host: process.env.IB_HOST || '127.0.0.1',
     port: Number(process.env.IB_PORT) || 4001,
     clientId: Number(process.env.IB_CLIENT_ID) || 17,
   },
-  // 1 = solo horario regular de mercado (estructura más limpia). 0 = incluye pre/post market.
+  // 1 = regular trading hours only (cleaner structure). 0 = includes pre/post market.
   useRTH: process.env.USE_RTH !== '0',
-  // 3 = delayed. Si no tienes suscripción de datos, IB entrega datos con retraso.
+  // 3 = delayed. Without a market data subscription, IB delivers delayed data.
   marketDataType: Number(process.env.IB_MARKET_DATA_TYPE) || 3,
-  // Separación mínima entre peticiones históricas (IB limita ~60 por 10 min).
+  // Minimum gap between historical requests (IB allows ~60 per 10 min).
   historicalGapMs: 350,
   requestTimeoutMs: 30000,
 };
 
-// Temporalidades soportadas. `ttl` = segundos que el servidor reutiliza el caché.
-// Duraciones: más historia = más velas para practicar, pero peticiones más pesadas.
+// Supported timeframes. `ttl` = seconds the server reuses the cache.
+// Durations: more history = more candles to practice on, but heavier requests.
 export const TIMEFRAMES = {
   '1D': { barSize: '1 day', duration: '2 Y', ttl: 300 },
   '4H': { barSize: '4 hours', duration: '6 M', ttl: 120 },

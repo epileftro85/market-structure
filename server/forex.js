@@ -1,5 +1,5 @@
-// reqMatchingSymbols de IB no devuelve pares de forex, así que el buscador los completa
-// con esta lista de pares IDEALPRO y luego resuelve su conId con reqContractDetails.
+// IB's reqMatchingSymbols does not return forex pairs, so the search fills them in
+// from this list of IDEALPRO pairs and then resolves their conId with reqContractDetails.
 
 export const FOREX_PAIRS = [
   'EUR.USD', 'GBP.USD', 'USD.JPY', 'USD.CHF', 'AUD.USD', 'USD.CAD', 'NZD.USD',
@@ -11,12 +11,12 @@ export const FOREX_PAIRS = [
 
 const normalize = (q) => q.toUpperCase().replace(/[^A-Z]/g, '');
 
-/** ¿La consulta parece un par? ("EUR.USD", "eur/usd", "EURUSD") → se prioriza sobre las acciones. */
+/** Does the query look like a pair? ("EUR.USD", "eur/usd", "EURUSD") → takes priority over stocks. */
 export function looksLikePair(q) {
   return /^[A-Za-z]{3}\s*[./ -]\s*[A-Za-z]{3}$/.test(q.trim()) || /^[A-Za-z]{6}$/.test(q.trim());
 }
 
-/** Pares que coinciden con el texto buscado (EUR, EURUSD, EUR.USD, usd/jpy, "eu"…). */
+/** Pairs matching the search text (EUR, EURUSD, EUR.USD, usd/jpy, "eu"…). */
 export function matchForexPairs(q) {
   const n = normalize(q);
   if (n.length < 2) return [];

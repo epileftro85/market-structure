@@ -40,7 +40,7 @@ Only what the user has said, or what follows directly from the conversation, is 
 - Wants to **learn to mark structure, not enter** the market yet: "solo aprender a marcar" ("just learn to mark").
 - Concepts they work with: ChoCH, BOS, HH/HL/LH/LL, EQH, top-down across 1D / 4H / 15m / 10m. Asked for help understanding
   EQH and said they need to learn more about the **role of each timeframe** (top-down analysis). This is noted under
-  "Pending to learn" in the README.
+  "Still to learn" in the README.
 - Instruments they have searched for: **EUR.USD and GBP.USD** (forex). It is not confirmed what else they study (the repo's tests also use stocks such as AAPL, for convenience).
 - Has **IBKR Desktop** and **IB Gateway** installed. IBKR only allows **one session per user**, so they cannot have
   Desktop and Gateway open with the same user at the same time (see §8).
