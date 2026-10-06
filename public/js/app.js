@@ -7,7 +7,7 @@ import { HELP as HELP_EN } from './help.en.js';
 import { EXAMPLES as EXAMPLES_ES } from './examples.js';
 import { EXAMPLES as EXAMPLES_EN } from './examples.en.js';
 
-// Contenido de la guía en el idioma activo (ver i18n.js)
+// Guide content in the active language (see i18n.js)
 const HELP = LANG === 'en' ? HELP_EN : HELP_ES;
 const EXAMPLES = LANG === 'en' ? EXAMPLES_EN : EXAMPLES_ES;
 
@@ -20,8 +20,8 @@ $('langSel').value = LANG;
 $('langSel').addEventListener('change', (e) => setLang(e.target.value));
 
 // ---------------------------------------------------------------------------
-// Estado de ESTA pestaña. Vive en la URL: duplicar la pestaña copia la vista
-// completa y cada pestaña puede después cambiar de símbolo por su cuenta.
+// State of THIS tab. It lives in the URL: duplicating the tab copies the whole
+// view, and each tab can then switch symbol on its own.
 // ---------------------------------------------------------------------------
 const IND_KEYS = ['fvg', 'ob', 'eq', 'sweep', 'ext', 'htf', 'ema50', 'ema200', 'vwap', 'vol'];
 const IND_COOKIE = 'ms_ind';
@@ -51,12 +51,12 @@ function readUrl() {
   return {
     contract,
     layout: LAYOUTS.includes(layout) ? layout : 4,
-    sel: sel.length ? sel.slice(0, 2) : ['15m', '4H'], // las 2 más recientes que eligió el usuario
+    sel: sel.length ? sel.slice(0, 2) : ['15m', '4H'], // the 2 most recent ones the user picked
     n: TFS.map((_, i) => clamp(nList[i], 1, 20, 3)),
     brk: q.get('brk') === 'wick' ? 'wick' : 'close',
     sw: q.get('sw') !== '0',
     st: q.get('st') !== '0',
-    // Indicadores: la URL manda (para que "duplicar pestaña" copie la vista); si no, el último uso (cookie)
+    // Indicators: the URL wins (so "duplicate tab" copies the view); otherwise, last used (cookie)
     ind: parseInd(q.has('ind') ? (q.get('ind') || '').split(',') : readIndCookie()),
   };
 }
@@ -89,7 +89,7 @@ function openInNewTab(contract) {
 }
 
 // ---------------------------------------------------------------------------
-// Paneles y layout
+// Panels and layout
 // ---------------------------------------------------------------------------
 const grid = $('grid');
 let syncing = false;
@@ -114,7 +114,7 @@ const panels = TFS.map(
   },
 );
 
-/** Qué temporalidades se ven según el layout. En 4 se ven todas. */
+/** Which timeframes are visible for the layout. With 4, all of them. */
 function shownTfs() {
   if (state.layout === 4) return TFS;
   return TFS.filter((t) => state.sel.slice(0, state.layout).includes(t));
@@ -165,7 +165,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'l' || e.key === 'L') $('layoutBtn').click();
 });
 
-// Cursor sincronizado: misma hora en todos los gráficos visibles
+// Synced crosshair: same time on every visible chart
 function syncCrosshair(source, param) {
   if (syncing) return;
   syncing = true;
@@ -182,9 +182,9 @@ function syncCrosshair(source, param) {
 }
 
 // ---------------------------------------------------------------------------
-// Carga de datos
+// Data loading
 // ---------------------------------------------------------------------------
-/** Paneles que hay que mantener cargados: los visibles y, con "niveles de TF mayor", las TF por encima. */
+/** Panels to keep loaded: the visible ones and, with "higher-TF levels", the TFs above them. */
 function neededTfs() {
   const shown = shownTfs();
   if (!state.ind.has('htf')) return shown;
@@ -198,7 +198,7 @@ function loadVisible({ force = false } = {}) {
   for (const p of panels) if (need.includes(p.tf)) p.load(state.contract, { force });
 }
 
-/** Cada panel dibuja los swings/rupturas vigentes de las temporalidades mayores que él. */
+/** Each panel draws the active swings/breaks of the timeframes higher than itself. */
 function refreshHtf() {
   panels.forEach((p, k) => {
     const info = panels
@@ -233,7 +233,7 @@ function renderCurrent() {
 }
 
 // ---------------------------------------------------------------------------
-// Opciones
+// Options
 // ---------------------------------------------------------------------------
 $('swChk').checked = state.sw;
 $('stChk').checked = state.st;
@@ -255,7 +255,7 @@ $('autoChk').addEventListener('change', (e) => setAuto(e.target.checked));
 setAuto(true);
 
 // ---------------------------------------------------------------------------
-// Menú de indicadores (todos opcionales y apagados por defecto)
+// Indicators menu (all optional and off by default)
 // ---------------------------------------------------------------------------
 const IND_GROUPS = [
   { title: t('ind.g.zones'), items: [
@@ -315,7 +315,7 @@ function renderIndMenu() {
   clear.textContent = t('ind.clear');
   clear.addEventListener('click', () => {
     state.ind.clear();
-    applyInd(); // applyInd sincroniza todas las casillas sin re-dibujar: el menú sigue abierto
+    applyInd(); // applyInd syncs every checkbox without re-rendering: the menu stays open
   });
   menu.appendChild(clear);
 }
@@ -330,7 +330,7 @@ function applyInd() {
   syncControls();
   renderIndBtn();
   persist();
-  loadVisible(); // por si "niveles de TF mayor" necesita cargar paneles ocultos
+  loadVisible(); // in case "higher-TF levels" needs to load hidden panels
 }
 
 $('indBtn').addEventListener('click', (e) => {
@@ -351,7 +351,7 @@ renderIndBtn();
 
 
 // ---------------------------------------------------------------------------
-// Guía contextual (botones "?"): panel lateral con qué es, cómo leerlo y cómo lo calcula la app
+// Contextual guide ("?" buttons): side panel with what it is, how to read it and how the app computes it
 // ---------------------------------------------------------------------------
 function getToggle(k) {
   return k === '@sw' ? state.sw : k === '@st' ? state.st : state.ind.has(k);
@@ -361,13 +361,13 @@ function setToggle(k, on) {
   if (k === '@sw' || k === '@st') {
     const box = $(k === '@sw' ? 'swChk' : 'stChk');
     box.checked = on;
-    box.dispatchEvent(new Event('change')); // reutiliza el manejador de la barra superior
+    box.dispatchEvent(new Event('change')); // reuses the top bar handler
   } else {
     toggleInd(k, on);
   }
 }
 
-/** Mantiene sincronizadas todas las casillas: menú, guía y barra superior. */
+/** Keeps every checkbox in sync: menu, guide and top bar. */
 function syncControls() {
   document.querySelectorAll('input[data-ind]').forEach((i) => { i.checked = state.ind.has(i.dataset.ind); });
   document.querySelectorAll('input[data-toggle]').forEach((i) => { i.checked = getToggle(i.dataset.toggle); });
@@ -404,7 +404,7 @@ function buildExample(ex) {
   for (const d of ex.diagrams ?? []) {
     const fig = el('figure', 'help-diagram');
     const holder = el('div');
-    holder.innerHTML = DIAGRAMS[d.key](LANG); // SVG propio y estático
+    holder.innerHTML = DIAGRAMS[d.key](LANG); // our own static SVG
     fig.append(holder, el('figcaption', null, d.caption));
     box.appendChild(fig);
   }
@@ -483,7 +483,7 @@ function buildHelp() {
       sec.appendChild(title);
       if (h.diagram) {
         const d = el('div', 'help-diagram');
-        d.innerHTML = DIAGRAMS[h.diagram](LANG); // SVG propio y estático (sin datos externos)
+        d.innerHTML = DIAGRAMS[h.diagram](LANG); // our own static SVG (no external data)
         sec.appendChild(d);
       }
       if (h.toggles?.length) {
@@ -525,7 +525,7 @@ function openHelp(key) {
   if (!sec) { scroller.scrollTo({ top: 0 }); return; }
   scroller.scrollTo({ top: sec.offsetTop - 8, behavior: 'smooth' });
   sec.classList.remove('flash');
-  void sec.offsetWidth; // reinicia la animación si ya estaba resaltada
+  void sec.offsetWidth; // restarts the animation if it was already highlighted
   sec.classList.add('flash');
 }
 
@@ -534,7 +534,7 @@ function closeHelp() {
   document.body.classList.remove('help-open');
 }
 
-// Cualquier elemento con data-help abre la guía en esa entrada (menú, barra superior, cabeceras de panel)
+// Any element with data-help opens the guide at that entry (menu, top bar, panel headers)
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-help]');
   if (!b) return;
@@ -545,7 +545,7 @@ document.addEventListener('click', (e) => {
 buildHelp();
 
 // ---------------------------------------------------------------------------
-// Favoritos (cookie)
+// Favorites (cookie)
 // ---------------------------------------------------------------------------
 $('favBtn').addEventListener('click', () => {
   if (!state.contract) return;
@@ -581,12 +581,12 @@ function renderFavBar() {
     bar.appendChild(chip);
   }
 }
-// La cookie es compartida: si otra pestaña cambió los favoritos, nos ponemos al día
+// The cookie is shared: if another tab changed the favorites, catch up
 window.addEventListener('focus', renderCurrent);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderCurrent(); });
 
 // ---------------------------------------------------------------------------
-// Buscador de símbolos (IB: reqMatchingSymbols)
+// Symbol search (IB: reqMatchingSymbols)
 // ---------------------------------------------------------------------------
 const qInput = $('q');
 const list = $('results');
@@ -631,7 +631,7 @@ function renderResults(results, note) {
       renderCurrent();
     });
     li.append(sym, name, meta, star);
-    li.addEventListener('mousedown', (e) => e.preventDefault()); // no pierde foco antes del clic
+    li.addEventListener('mousedown', (e) => e.preventDefault()); // don't lose focus before the click
     li.addEventListener('click', (e) => choose(r, e.metaKey || e.ctrlKey));
     list.appendChild(li);
   });
@@ -677,7 +677,7 @@ qInput.addEventListener('blur', () => setTimeout(closeResults, 120));
 qInput.addEventListener('focus', () => { if (items.length && qInput.value) list.hidden = false; });
 
 // ---------------------------------------------------------------------------
-// Estado de la conexión con IB
+// IB connection status
 // ---------------------------------------------------------------------------
 let wasConnected = null;
 async function pollStatus() {
@@ -688,7 +688,7 @@ async function pollStatus() {
     dot.title = s.mock
       ? t('status.mock')
       : s.connected ? t('status.connected', s) : t('status.disconnected', s) + (s.lastError ? ' · ' + s.lastError : '');
-    if (s.connected && wasConnected === false) loadVisible({ force: true }); // IB volvió: reintenta
+    if (s.connected && wasConnected === false) loadVisible({ force: true }); // IB is back: retry
     wasConnected = s.connected;
   } catch {
     dot.className = 'dot bad';
@@ -708,7 +708,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => (box.hidden = true), 2200);
 }
 
-// Arranque
+// Startup
 (async function init() {
   const label = state.contract ? displayName(state.contract) : '';
   panels.forEach((p) => p.setSymbolLabel(label));

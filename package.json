@@ -1,7 +1,7 @@
 {
   "name": "market-structure",
   "version": "0.1.0",
-  "description": "MVP: marcador de estructura de mercado (HH/HL/LH/LL, BOS, CHoCH) con datos de Interactive Brokers",
+  "description": "MVP: market structure marker (HH/HL/LH/LL, BOS, CHoCH) with Interactive Brokers data",
   "type": "module",
   "private": true,
   "engines": {

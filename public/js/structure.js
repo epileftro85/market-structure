@@ -1,24 +1,24 @@
-// Detección de estructura de mercado. Módulo PURO: velas entran, marcas salen.
-// No depende del navegador ni de Node, así que se prueba con `npm test`.
+// Market structure detection. PURE module: bars in, marks out.
+// It depends on neither the browser nor Node, so it is tested with `npm test`.
 //
-// Definiciones (las mismas que usan indicadores populares tipo "Smart Money Concepts"):
+// Definitions (the same ones used by popular "Smart Money Concepts" style indicators):
 //
-//  • Swing high  : vela cuyo máximo es mayor que el de las `n` velas anteriores y
-//                  mayor o igual que el de las `n` posteriores.
-//  • Swing low   : lo mismo a la inversa.
-//  • Un swing solo se CONFIRMA `n` velas después de formarse. Por eso las marcas
-//    más recientes pueden aparecer "tarde": es inherente a cualquier indicador de swings.
-//  • Etiquetas   : cada swing se compara con el anterior de su mismo tipo
-//                  high:  HH (más alto) / LH (más bajo)
-//                  low :  HL (más alto) / LL (más bajo)
-//  • Ruptura     : cuando el precio supera el último swing high (o pierde el último
-//                  swing low) todavía no roto.
-//        - Si va A FAVOR de la tendencia vigente  → BOS   (Break of Structure)
-//        - Si va EN CONTRA de la tendencia vigente → CHoCH (Change of Character)
-//        - La primera ruptura del gráfico fija la tendencia y se marca como BOS.
-//  • `breakBy`   : 'close' (cierre más allá del nivel) o 'wick' (basta la mecha).
+//  • Swing high  : candle whose high is greater than the previous `n` candles' and
+//                  greater than or equal to the next `n` candles'.
+//  • Swing low   : the same, inverted.
+//  • A swing is only CONFIRMED `n` candles after it forms. That is why the most
+//    recent marks can appear "late": it is inherent to any swing indicator.
+//  • Labels      : each swing is compared with the previous one of the same type
+//                  high:  HH (higher) / LH (lower)
+//                  low :  HL (higher) / LL (lower)
+//  • Break       : when price goes above the last swing high (or below the last
+//                  swing low) not yet broken.
+//        - If it goes WITH the current trend     → BOS   (Break of Structure)
+//        - If it goes AGAINST the current trend  → CHoCH (Change of Character)
+//        - The chart's first break sets the trend and is marked as BOS.
+//  • `breakBy`   : 'close' (close beyond the level) or 'wick' (the wick is enough).
 //
-// Formato de velas de entrada: { time, open, high, low, close }
+// Input bar format: { time, open, high, low, close }
 
 /**
  * @param {Array<{time:number, open:number, high:number, low:number, close:number}>} bars
@@ -32,13 +32,13 @@ export function detectStructure(bars, opts = {}) {
   const breaks = [];
   let trend = null; // 'bull' | 'bear' | null
 
-  let lastHighPivot = null; // último pivot high confirmado (para etiquetar HH/LH)
-  let lastLowPivot = null;  // último pivot low confirmado (para etiquetar HL/LL)
-  let activeHigh = null;    // nivel de swing high aún no roto
-  let activeLow = null;     // nivel de swing low aún no roto
+  let lastHighPivot = null; // last confirmed pivot high (to label HH/LH)
+  let lastLowPivot = null;  // last confirmed pivot low (to label HL/LL)
+  let activeHigh = null;    // swing high level not yet broken
+  let activeLow = null;     // swing low level not yet broken
 
   for (let i = 0; i < bars.length; i++) {
-    // 1) ¿Se confirma un pivote ahora? El candidato es la vela i-n.
+    // 1) Is a pivot confirmed now? The candidate is candle i-n.
     const p = i - n;
     if (p >= n) {
       if (isSwingHigh(bars, p, n)) {
@@ -61,7 +61,7 @@ export function detectStructure(bars, opts = {}) {
       }
     }
 
-    // 2) ¿La vela actual rompe algún nivel activo?
+    // 2) Does the current candle break any active level?
     const bar = bars[i];
     const upSide = breakBy === 'wick' ? bar.high : bar.close;
     const downSide = breakBy === 'wick' ? bar.low : bar.close;
@@ -94,8 +94,8 @@ export function detectStructure(bars, opts = {}) {
 function isSwingHigh(bars, p, n) {
   const h = bars[p].high;
   for (let j = 1; j <= n; j++) {
-    if (bars[p - j].high >= h) return false; // izquierda: estrictamente mayor
-    if (bars[p + j].high > h) return false;  // derecha: mayor o igual
+    if (bars[p - j].high >= h) return false; // left: strictly greater
+    if (bars[p + j].high > h) return false;  // right: greater or equal
   }
   return true;
 }

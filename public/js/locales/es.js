@@ -1,5 +1,5 @@
-// Textos de la interfaz en español (idioma por defecto). Las claves deben existir también en en.js (hay un test).
-// La guía y los ejemplos no van aquí: viven en help.js / examples.js (y sus versiones .en.js).
+// UI text in Spanish (default language). Keys must also exist in en.js (a test checks it).
+// The guide and examples do not go here: they live in help.js / examples.js (and their .en.js versions).
 export default {
   'app.title': 'Estructura de mercado',
   'app.titleWith': '{symbol} · Estructura',

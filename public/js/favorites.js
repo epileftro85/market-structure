@@ -1,6 +1,6 @@
-// Favoritos guardados en una cookie (compartida entre todas las pestañas del mismo origen).
-// Formato: JSON compacto [[symbol, conId, secType, exchange, currency, name], ...]
-// Las cookies miden como máximo ~4 KB, así que si se excede se descartan los más antiguos.
+// Favorites stored in a cookie (shared by every tab of the same origin).
+// Format: compact JSON [[symbol, conId, secType, exchange, currency, name], ...]
+// Cookies hold at most ~4 KB, so when that is exceeded the oldest ones are dropped.
 
 const COOKIE = 'ms_favs';
 const MAX_ENCODED = 3500;
@@ -30,7 +30,7 @@ export function writeFavs(list) {
 
 export const isFav = (c) => !!c && readFavs().some((f) => f.conId === c.conId);
 
-/** Agrega o quita el contrato. Devuelve true si quedó como favorito. */
+/** Adds or removes the contract. Returns true if it ended up as a favorite. */
 export function toggleFav(c) {
   const list = readFavs();
   const i = list.findIndex((f) => f.conId === c.conId);

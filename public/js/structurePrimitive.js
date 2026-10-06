@@ -1,12 +1,12 @@
-// Dibuja las marcas directamente sobre el canvas del gráfico (primitive de lightweight-charts),
-// así se mueven y escalan solas al hacer zoom/scroll.
+// Draws the marks directly on the chart canvas (lightweight-charts primitive),
+// so they move and scale by themselves on zoom/scroll.
 //
-// Dos capas: zonas (detrás de las velas) y marcas (encima).
-// Datos que recibe en update():
-//   structure / ext : resultado de detectStructure (interna / externa)
-//   zones           : FVG y Order Blocks sin mitigar
-//   eq, sweeps      : liquidez
-//   htf             : niveles de temporalidades mayores [{ color, lines:[{price,label,dash}] }]
+// Two layers: zones (behind the candles) and marks (on top).
+// Data received in update():
+//   structure / ext : detectStructure result (internal / external)
+//   zones           : unmitigated FVGs and Order Blocks
+//   eq, sweeps      : liquidity
+//   htf             : higher-timeframe levels [{ color, lines:[{price,label,dash}] }]
 
 export const COLORS = {
   up: '#2ebd85',
@@ -26,7 +26,7 @@ function rgba(hex, a) {
   return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
 
-/** Texto con fondo "píldora" (para la estructura externa). */
+/** Text with a "pill" background (for the external structure). */
 function pill(ctx, text, cx, baseY, color) {
   const w = ctx.measureText(text).width + 8;
   const x = cx - w / 2;

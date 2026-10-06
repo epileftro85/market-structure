@@ -1,8 +1,8 @@
-// Cliente del backend + normalización de tiempos.
+// Backend client + time normalization.
 //
-// lightweight-charts dibuja los tiempos como UTC. Para ver la hora de la bolsa
-// (y no UTC) desplazamos cada vela por el offset de la zona horaria de visualización.
-// Es solo cosmético: el precio y el orden no cambian.
+// lightweight-charts draws times as UTC. To show exchange time
+// (not UTC) we shift each bar by the offset of the display time zone.
+// It is purely cosmetic: price and order do not change.
 
 import { t } from './i18n.js';
 
@@ -37,7 +37,7 @@ async function getJSON(url, signal) {
   }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    // Los mensajes propios del servidor se traducen por código; los de IB se muestran tal cual
+    // The server's own messages are translated by code; IB's are shown as-is
     const own = { ib_not_connected: 'err.notConnected', bad_request: 'err.badRequest' }[body.error];
     const err = new Error(own ? t(own) : body.message || t('err.http', { status: res.status }));
     err.status = res.status;
@@ -65,7 +65,7 @@ export async function fetchBars(contract, tf, signal) {
     let t = b.t;
     if (!dateOnly) {
       t += tzOffsetSec(t);
-      if (tf === '1D') t -= ((t % 86400) + 86400) % 86400; // vela diaria = medianoche de su día
+      if (tf === '1D') t -= ((t % 86400) + 86400) % 86400; // daily bar = midnight of its day
     }
     if (out.length && t <= out[out.length - 1].time) continue;
     out.push({ time: t, open: b.o, high: b.h, low: b.l, close: b.c, volume: b.v || 0 });

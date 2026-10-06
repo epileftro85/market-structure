@@ -1,18 +1,18 @@
-// Ejemplos prácticos de cada entrada de la guía (help.js). Solo datos.
+// Practical examples for each guide entry (help.js). Data only.
 //
-// Todos los números son ILUSTRATIVOS (para mostrar cómo medir y razonar); no son estadísticas
-// ni resultados históricos, y nada de esto es una recomendación de inversión.
+// All numbers are ILLUSTRATIVE (to show how to measure and reason); they are not statistics
+// or historical results, and none of this is investment advice.
 //
-// Estructura de cada ejemplo:
-//   title      título corto
-//   scenario   situación concreta con números
-//   diagrams   [{ key, caption }]  dibujos extra (claves de DIAGRAMS en help.js)
-//   steps      "Qué hacer" paso a paso, en la app
-//   outcomes   [{ title, when, means, check }]  escenarios: si pasa X → cómo leerlo → qué comprobar
-//   measure    qué medir (y cómo)
-//   mistakes   errores comunes
+// Structure of each example:
+//   title      short title
+//   scenario   concrete situation with numbers
+//   diagrams   [{ key, caption }]  extra drawings (keys of DIAGRAMS in help.js)
+//   steps      "What to do" step by step, in the app
+//   outcomes   [{ title, when, means, check }]  scenarios: if X happens → how to read it → what to check
+//   measure    what to measure (and how)
+//   mistakes   common mistakes
 //
-// Convención de pips: EUR/USD, 1 pip = 0.0001.
+// Pip convention: EUR/USD, 1 pip = 0.0001.
 
 export const EXAMPLES = {
   // ------------------------------------------------------------------ EQH / EQL
@@ -251,7 +251,7 @@ export const EXAMPLES = {
     ],
   },
 
-  // ------------------------------------------------------------------ Externa
+  // ------------------------------------------------------------------ External
   ext: {
     title: 'n = 3 (interna) frente a n = 9 (externa)',
     scenario:
@@ -347,7 +347,7 @@ export const EXAMPLES = {
     ],
   },
 
-  // ------------------------------------------------------------------ Volumen
+  // ------------------------------------------------------------------ Volume
   vol: {
     title: 'Volumen en una ruptura (acciones)',
     scenario:

@@ -1,28 +1,28 @@
-// Contenido de la guía contextual (botones "?") y mini-diagramas.
-// Es solo datos: app.js lo convierte en el panel lateral.
+// Content of the contextual guide ("?" buttons) and mini-diagrams.
+// Data only: app.js turns it into the side panel.
 //
-// Cada entrada:
-//   key      identificador (lo usan los data-help="..." del HTML)
-//   group    sección de la guía (clave de GROUPS; el título está en GROUP_TITLES)
-//   title    título
-//   color    color con el que se dibuja en el gráfico
-//   what     qué es (texto)
-//   read     cómo leerlo en el gráfico (lista)
-//   rules    regla exacta que aplica ESTA app (lista)
-//   practice qué practicar para aprender
-//   caveat   límites / advertencias
-//   toggles  interruptores que se pueden accionar desde la guía: [{ k, label }]
-//            k = clave de indicador, o '@sw' / '@st' (casillas de la barra superior)
-//   diagram  clave del dibujo (opcional). DIAGRAMS[k](lang) devuelve el SVG con etiquetas en ese idioma
+// Each entry:
+//   key      identifier (used by the HTML's data-help="...")
+//   group    guide section (key of GROUPS; the title is in GROUP_TITLES)
+//   title    title
+//   color    color it is drawn with on the chart
+//   what     what it is (text)
+//   read     how to read it on the chart (list)
+//   rules    exact rule THIS app applies (list)
+//   practice what to practice in order to learn
+//   caveat   limits / warnings
+//   toggles  switches that can be toggled from the guide: [{ k, label }]
+//            k = indicator key, or '@sw' / '@st' (top bar checkboxes)
+//   diagram  drawing key (optional). DIAGRAMS[k](lang) returns the SVG with labels in that language
 //
-// La versión en inglés del contenido está en help.en.js (mismas claves, mismos toggles y diagramas).
+// The English version of the content is in help.en.js (same keys, same toggles and diagrams).
 
 export const C = {
   up: '#2ebd85', down: '#f6465d', bos: '#6ea8fe', choch: '#f5a524', eq: '#94a3b8',
   sweep: '#f472b6', mute: '#8b95a5', htf4: '#22d3ee', htf1: '#c084fc',
 };
 
-// ---------------------------------------------------------------- dibujos
+// ---------------------------------------------------------------- drawings
 const svg = (inner) =>
   `<svg viewBox="0 0 230 110" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 const ln = (x1, y1, x2, y2, c, { w = 1.5, d = '' } = {}) =>
@@ -34,13 +34,13 @@ const poly = (pts, c, w = 1.6) =>
   `<polyline points="${pts.map((p) => p.join(',')).join(' ')}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
 const box = (x, y, w, h, c, { fill = 0.16, d = '' } = {}) =>
   `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" fill-opacity="${fill}" stroke="${c}" stroke-opacity=".8" stroke-width="1.2"${d ? ` stroke-dasharray="${d}"` : ''}/>`;
-// y crece hacia ABAJO (precio menor). Vela verde si cierra por encima de su apertura (c < o en y).
+// y grows DOWNWARD (lower price). Green candle if it closes above its open (c < o in y).
 const candle = (x, o, c, h, l) => {
   const col = c <= o ? C.up : C.down;
   return `${ln(x, h, x, l, col, { w: 1.2 })}<rect x="${x - 4}" y="${Math.min(o, c)}" width="8" height="${Math.max(2, Math.abs(o - c))}" fill="${col}"/>`;
 };
 
-// Etiquetas de los dibujos en el idioma pedido (español por defecto).
+// Drawing labels in the requested language (Spanish by default).
 const L = (lang, es, en) => (lang === 'en' ? en : es);
 
 export const DIAGRAMS = {
@@ -81,7 +81,7 @@ export const DIAGRAMS = {
   ob: (lang) => svg([
     ln(12, 35, 102, 35, C.bos, { w: 1.2, d: '4 3' }), tx(56, 29, 'BOS', C.bos),
     box(50, 60, 168, 17, C.up, { fill: 0.2 }),
-    candle(30, 76, 66, 62, 78), candle(54, 64, 74, 60, 77), // la 2.ª es la vela bajista (OB)
+    candle(30, 76, 66, 62, 78), candle(54, 64, 74, 60, 77), // the 2nd one is the bearish candle (OB)
     candle(78, 72, 46, 43, 74), candle(102, 46, 26, 22, 48), candle(126, 28, 18, 14, 30),
     candle(152, 20, 50, 18, 54), candle(176, 52, 64, 50, 68), candle(200, 62, 34, 30, 66),
     tx(128, 73, 'OB', C.up),
@@ -117,7 +117,7 @@ export const DIAGRAMS = {
   eq_sweep: (lang) => svg([
     ln(0, 40, 230, 40, C.eq, { w: 1.2, d: '2 3' }), tx(22, 34, 'EQH', C.eq),
     candle(64, 66, 54, 50, 70), candle(88, 56, 46, 43, 59), candle(112, 50, 44, 42, 53),
-    candle(142, 44, 58, 20, 60), // mecha por encima del nivel, cierra debajo
+    candle(142, 44, 58, 20, 60), // wick above the level, closes below
     candle(168, 58, 72, 56, 75), candle(194, 72, 88, 70, 90),
     ln(152, 20, 152, 40, C.sweep, { w: 1 }), tx(158, 32, L(lang, 'mecha', 'wick'), C.sweep, { s: 8, a: 'start' }),
     tx(142, 13, '▼ sweep', C.sweep),
@@ -127,7 +127,7 @@ export const DIAGRAMS = {
   eq_break: (lang) => svg([
     ln(0, 46, 230, 46, C.eq, { w: 1.2, d: '2 3' }), tx(22, 40, 'EQH', C.eq),
     candle(46, 74, 64, 60, 76), candle(70, 64, 54, 50, 66), candle(94, 56, 49, 47, 58),
-    candle(124, 50, 26, 22, 52), // cierra más allá del nivel
+    candle(124, 50, 26, 22, 52), // closes beyond the level
     candle(150, 28, 38, 26, 40), candle(176, 40, 48, 38, 50), candle(204, 48, 24, 20, 50),
     tx(124, 14, L(lang, 'cierra más allá', 'closes beyond'), C.bos, { s: 9 }),
     tx(176, 66, 'retest', C.mute, { s: 8 }), ln(176, 52, 176, 60, C.mute, { w: 1 }),
@@ -170,7 +170,7 @@ export const DIAGRAMS = {
   ].join('')),
 };
 
-// ---------------------------------------------------------------- contenido
+// ---------------------------------------------------------------- content
 export const GROUPS = ['basic', 'zones', 'liquidity', 'advanced', 'context'];
 export const GROUP_TITLES = {
   es: { basic: 'Estructura básica', zones: 'Zonas', liquidity: 'Liquidez', advanced: 'Estructura avanzada', context: 'Contexto' },
@@ -362,5 +362,5 @@ export const HELP = [
   },
 ];
 
-/** Los interruptores del menú (ema50, ema200) comparten una sola entrada de ayuda. */
+/** The menu switches (ema50, ema200) share a single help entry. */
 export const helpKeyFor = (indKey) => (indKey === 'ema50' || indKey === 'ema200' ? 'ema' : indKey);

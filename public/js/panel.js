@@ -5,9 +5,9 @@ import { detectFVG, detectOrderBlocks, detectEqualLevels, detectSweeps, ema, vwa
 import { StructurePrimitive } from './structurePrimitive.js';
 import { LANG, t } from './i18n.js';
 
-/** La estructura externa usa un `n` este número de veces mayor que la interna. */
+/** External structure uses an `n` this many times larger than the internal one. */
 export const EXT_FACTOR = 3;
-/** Cuántas zonas/niveles recientes se dibujan como máximo (para no saturar el gráfico). */
+/** Maximum number of recent zones/levels drawn (to avoid cluttering the chart). */
 const MAX = { fvg: 10, ob: 6, eq: 8, sweep: 12 };
 const HTF_COLORS = { '1D': '#c084fc', '4H': '#22d3ee', '15m': '#a3e635' };
 const LINE_COLORS = { ema50: '#93c5fd', ema200: '#e2e8f0', vwap: '#fbbf24' };
@@ -17,7 +17,7 @@ const THEME = {
   up: '#26a69a', down: '#ef5350',
 };
 
-/** Un panel = una temporalidad: cabecera + gráfico + estructura. */
+/** One panel = one timeframe: header + chart + structure. */
 export class Panel {
   /**
    * @param {string} tf  '1D' | '4H' | '15m' | '10m'
@@ -94,7 +94,7 @@ export class Panel {
       wickUpColor: THEME.up, wickDownColor: THEME.down,
       borderVisible: false,
     });
-    // Series opcionales (ocultas hasta que se activan en el menú de indicadores)
+    // Optional series (hidden until enabled in the indicators menu)
     const line = (color) => this.chart.addSeries(LineSeries, {
       color, lineWidth: 1.5, visible: false, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
     });
@@ -112,11 +112,11 @@ export class Panel {
     this.setN(this.n);
   }
 
-  // ---------- estado visual ----------
+  // ---------- visual state ----------
   setVisible(v) {
     this.visible = v;
     this.el.hidden = !v;
-    // Si los datos llegaron mientras estaba oculto, el gráfico no tenía tamaño: ajusta ahora
+    // If data arrived while hidden, the chart had no size: fit now
     if (v && this.needsFit) requestAnimationFrame(() => this.fitDefault());
   }
 
@@ -127,13 +127,13 @@ export class Panel {
     this.needsFit = false;
   }
 
-  /** Activa/desactiva indicadores (Set de claves: fvg, ob, eq, sweep, ext, htf, ema50, ema200, vwap, vol). */
+  /** Turns indicators on/off (Set of keys: fvg, ob, eq, sweep, ext, htf, ema50, ema200, vwap, vol). */
   setInd(set) {
     this.ind = new Set(set);
     this.recompute();
   }
 
-  /** Niveles de temporalidades mayores: [{tf, high, low, brk}] */
+  /** Higher-timeframe levels: [{tf, high, low, brk}] */
   setHtf(info) {
     this.htfLines = info.map((h) => ({
       color: HTF_COLORS[h.tf] ?? '#ffffff',
@@ -190,7 +190,7 @@ export class Panel {
     }
   }
 
-  // ---------- datos ----------
+  // ---------- data ----------
   clearData() {
     this.bars = [];
     this.series.setData([]);
@@ -203,7 +203,7 @@ export class Panel {
     this.loadedKey = null;
   }
 
-  /** Forex necesita 5 decimales (3 en pares con JPY); el resto, 2. */
+  /** Forex needs 5 decimals (3 for JPY pairs); everything else, 2. */
   setPriceFormat(contract) {
     const fx = contract.secType === 'CASH';
     const jpy = fx && (contract.symbol === 'JPY' || contract.currency === 'JPY');
@@ -211,7 +211,7 @@ export class Panel {
     this.series.applyOptions({ priceFormat: { type: 'price', precision, minMove: 1 / 10 ** precision } });
   }
 
-  /** Carga (o refresca) las velas. `force` ignora el tiempo mínimo entre refrescos. */
+  /** Loads (or refreshes) the bars. `force` ignores the minimum time between refreshes. */
   async load(contract, { force = false } = {}) {
     this.setPriceFormat(contract);
     const key = contract.conId;
@@ -243,7 +243,7 @@ export class Panel {
     const canPatch = !isNew && lastOld !== null && bars.some((b) => b.time === lastOld);
     this.bars = bars;
     if (canPatch) {
-      // Refresco incremental: no mueve el zoom ni la posición del usuario
+      // Incremental refresh: does not move the user's zoom or position
       for (const b of bars) if (b.time >= lastOld) this.series.update(b);
     } else {
       this.series.setData(bars);
@@ -280,7 +280,7 @@ export class Panel {
     this.hooks.onUpdate?.(this);
   }
 
-  /** EMA / VWAP / volumen: solo se calculan si están activos. */
+  /** EMA / VWAP / volume: only computed when enabled. */
   updateSeries() {
     const { bars, ind } = this;
     const on = (k) => ind.has(k);
@@ -305,7 +305,7 @@ export class Panel {
     this.noteEl.textContent = notes.join(' · ');
   }
 
-  // ---------- cursor sincronizado ----------
+  // ---------- synced crosshair ----------
   barAtOrBefore(time) {
     const b = this.bars;
     let lo = 0, hi = b.length - 1, ans = -1;
