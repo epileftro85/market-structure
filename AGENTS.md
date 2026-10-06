@@ -10,7 +10,7 @@ Last updated: 2026-10-06.
 ## 1. What this project is
 
 **market-structure** is an MVP for **learning to mark market structure**, not for trading.
-It pulls candles from Interactive Brokers (IB) and draws on top of them, on 4 timeframes at once (1D, 4H, 15m, 10m):
+It pulls candles from Interactive Brokers (IB) or Alpaca (chosen in `.env`) and draws on top of them, on 4 timeframes at once (1D, 4H, 15m, 10m):
 
 - Swings and **HH / HL / LH / LL** labels
 - **BOS** (Break of Structure) and **CHoCH** (Change of Character)
@@ -76,17 +76,28 @@ Only what the user has said, or what follows directly from the conversation, is 
 ```
 IB Gateway / TWS (local)  ──TCP socket──▶  Node server (Express)  ──HTTP JSON──▶  Browser (N tabs)
         port 4001 (cfg)                    server/                                public/ (ES modules)
+  or Alpaca data API     ──HTTPS GET──▶    (one provider, DATA_PROVIDER)
 ```
 
-- **Node ≥ 18**, ESM (`"type": "module"`). Dependencies: `express`, `@stoqey/ib`, `lightweight-charts` (v5, served from
+- **Provider strategy** (`server/providers.js`): `DATA_PROVIDER=ibkr` (default) | `alpaca` | `mock` (`MOCK=1` still forces mock).
+  Every provider implements `connect / shutdown / status / searchSymbols / getBars` with the same shapes; errors carry
+  `code` (`NOT_CONNECTED`, `DISCONNECTED`, `TIMEOUT`, `UNSUPPORTED`; IB errors still use `ibCode`). The HTTP error names
+  (`ib_not_connected`, `ib_error`) were kept for frontend compatibility. `status()` returns `provider` and `target` (shown in the dot's tooltip).
+- **`.env`** is loaded by `server/config.js` with `dotenv` (shell variables win). `.env` is git-ignored; `.env.example` documents every variable. Never commit real keys.
+- **Alpaca**: US stocks/ETFs only (FX data is for broker partners only; no indices). GET-only to `/v2/clock`, `/v2/assets` and `data.alpaca.markets/v2/stocks/bars`.
+  No conId: a stable numeric id is derived from the symbol (`symbolId`), bars are requested by symbol. With RTH, 4H is built from 30Min bars (9:30 / 13:30 NY, like IB).
+
+- **Node ≥ 18**, ESM (`"type": "module"`). Dependencies: `express`, `@stoqey/ib`, `dotenv`, `lightweight-charts` (v5, served from
   `node_modules` at `/vendor`, no CDN). No build step.
-- **One server, one IB connection**, shared by all tabs. Listens only on `127.0.0.1`.
+- **One server, one provider connection**, shared by all tabs. Listens only on `127.0.0.1`.
 - Each tab's state lives **in the URL** (symbol, layout, `n` per panel, break mode, indicators). "Duplicate tab" copies the URL.
 - Cookies: `ms_favs` (favorites), `ms_ind` (last-used indicators) and `ms_lang` (language chosen with the ES/EN button). They belong to the **host** `127.0.0.1` (not port-specific): if the user opens the app as `localhost`, they will not see the same cookies.
 
 ```
 server/
-  config.js      ports, TIMEFRAMES (barSize/duration/ttl), useRTH, IB limits
+  config.js      loads .env; provider, ports, Alpaca keys, TIMEFRAMES (barSize/duration/ttl), useRTH, IB limits
+  providers.js   provider strategy: createProvider() → IBClient | AlpacaClient | MockClient
+  alpaca.js      Alpaca client: key check, asset search, bars (pagination, RTH filter, session 4H), cache
   ib.js          IB client: connect/reconnect, search, historical data, cache, queue (pacing), forex
   forex.js       list of IDEALPRO pairs and search (reqMatchingSymbols does NOT return forex)
   mock.js        simulated data (MOCK=1) to test the UI without IB
@@ -102,7 +113,7 @@ public/
   js/help.en.js · js/examples.en.js   the same guide and examples in English (same keys)
   js/i18n.js · js/locales/{es,en}.js   active language, t('key') and UI strings
   js/api.js · js/favorites.js   backend client / favorites cookie
-test/                       node:test (structure, indicators, forex, help)
+test/                       node:test (structure, indicators, forex, help, alpaca)
 ```
 
 **Languages (i18n)**: Spanish (default) and English. Spanish UI/guide content lives in `locales/es.js`, `help.js` and `examples.js`;
@@ -122,12 +133,13 @@ Data flow: `app.js` requests bars per panel → `api.js` normalizes (time shifte
 
 ```bash
 npm install
+cp .env.example .env   # provider, language, Alpaca keys
 npm start        # IB at 127.0.0.1:4001 (default in config.js). IB_PORT=4002 npm start for Gateway paper
 npm run mock     # simulated data, no IB
 npm test         # node --test  (must pass in full before delivering any change)
 ```
 
-Useful environment variables: `IB_PORT`, `IB_HOST`, `IB_CLIENT_ID` (17), `PORT` (3000), `USE_RTH=0` (includes pre/post market), `MOCK=1`, `APP_LANG=en` (default language; `es` if not set).
+Useful environment variables (shell or `.env`): `DATA_PROVIDER` (`ibkr`|`alpaca`|`mock`), `ALPACA_API_KEY_ID`, `ALPACA_API_SECRET_KEY`, `ALPACA_PAPER` (1), `ALPACA_FEED` (`iex`|`sip`), `IB_PORT`, `IB_HOST`, `IB_CLIENT_ID` (17), `PORT` (3000), `USE_RTH=0` (includes pre/post market), `MOCK=1`, `APP_LANG=en` (default language; `es` if not set).
 IB ports: Gateway live 4001 / paper 4002; TWS live 7496 / paper 7497.
 Installing and running IB Gateway (download, login, API settings, ports): see the "IB Gateway setup" section of `README.md`.
 
@@ -165,6 +177,7 @@ If you change a rule, update all of these together: the code, `help.js`, `exampl
 | UI (layouts, menu, guide, favorites, synced crosshair, cookies) | Tested in headless Chromium with simulated data |
 | IB client (search, historical data, forex) | Tested **only against a fake IB** that emits the same events; checked against the `@stoqey/ib` typings |
 | **Connection to a real IB Gateway** | **Not verified by the AI.** Real testing is done by the user |
+| Alpaca client (search, bars, RTH, 4H) | Tested **only against a fake Alpaca API** (`test/alpaca.test.js`); endpoints and fields taken from Alpaca's docs. **Not verified with real keys** |
 | Data permissions for forex/stocks on their account | Unknown: IB may reject series without a subscription (the panel shows IB's error) |
 
 If the user reports an IB error, ask for the exact message (code and text) before speculating.
@@ -189,6 +202,7 @@ If the user reports an IB error, ask for the exact message (code and text) befor
 
 1. **Never** add order submission, account modification, or endpoints that perform trading actions. This project is read-only.
 2. Keep the server on **`127.0.0.1`**; do not expose it to the network. In Gateway, the user must keep **Read-Only API** enabled.
+   The Alpaca client must stay GET-only against data/assets/clock endpoints (a test checks this).
 3. Do not log, upload or share credentials, account numbers or position data.
 4. Educational content: keep the "illustrative / not investment advice" disclaimers.
 5. Do not insert external data as unescaped HTML: the UI uses `textContent`; the diagram SVG is our own and static (a test checks this).

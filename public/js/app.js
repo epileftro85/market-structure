@@ -586,7 +586,7 @@ window.addEventListener('focus', renderCurrent);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderCurrent(); });
 
 // ---------------------------------------------------------------------------
-// Symbol search (IB: reqMatchingSymbols)
+// Symbol search (provider's search endpoint)
 // ---------------------------------------------------------------------------
 const qInput = $('q');
 const list = $('results');
@@ -677,7 +677,7 @@ qInput.addEventListener('blur', () => setTimeout(closeResults, 120));
 qInput.addEventListener('focus', () => { if (items.length && qInput.value) list.hidden = false; });
 
 // ---------------------------------------------------------------------------
-// IB connection status
+// Data provider connection status
 // ---------------------------------------------------------------------------
 let wasConnected = null;
 async function pollStatus() {
@@ -688,7 +688,7 @@ async function pollStatus() {
     dot.title = s.mock
       ? t('status.mock')
       : s.connected ? t('status.connected', s) : t('status.disconnected', s) + (s.lastError ? ' · ' + s.lastError : '');
-    if (s.connected && wasConnected === false) loadVisible({ force: true }); // IB is back: retry
+    if (s.connected && wasConnected === false) loadVisible({ force: true }); // provider is back: retry
     wasConnected = s.connected;
   } catch {
     dot.className = 'dot bad';

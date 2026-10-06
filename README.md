@@ -1,11 +1,12 @@
 # market-structure
 
-An MVP to **learn how to mark market structure** (not to trade): it pulls candles from Interactive Brokers and draws
+An MVP to **learn how to mark market structure** (not to trade): it pulls candles from Interactive Brokers or Alpaca and draws
 **HH / HL / LH / LL**, **BOS** and **CHoCH** on 4 timeframes at once (1D, 4H, 15m, 10m).
 
 - Node + Express on the server, the browser for the charts ([lightweight-charts](https://github.com/tradingview/lightweight-charts)).
 - Each browser tab is independent: its state lives in the URL (symbol, layout, parameters).
-- Symbol search against IB and favorites saved in a cookie.
+- Symbol search against the data provider and favorites saved in a cookie.
+- Data provider chosen in `.env`: **IBKR** (default) or **Alpaca** (see [Data providers](#data-providers-ibkr-or-alpaca)).
 - Interface and guide in **Spanish and English** (see [Language](#language)).
 
 > Educational tool only. It never sends orders and nothing in it is investment advice.
@@ -14,14 +15,62 @@ An MVP to **learn how to mark market structure** (not to trade): it pulls candle
 
 ```bash
 npm install
-npm start            # connects to IB at 127.0.0.1:4001 (IB Gateway, live)
+cp .env.example .env # optional: provider, language, Alpaca keys (see below)
+npm start            # IBKR by default: connects to IB at 127.0.0.1:4001 (IB Gateway, live)
 # IB_PORT=4002 npm start   ← IB Gateway paper account
 # IB_PORT=7497 npm start   ← TWS paper
 npm run mock         # simulated data, no IB needed (to try the interface)
 npm test             # unit tests
 ```
 
-Then open <http://127.0.0.1:3000>. The first time, set up IB Gateway as described below.
+Then open <http://127.0.0.1:3000>. The first time, set up IB Gateway as described below (or switch to Alpaca).
+
+## Data providers (IBKR or Alpaca)
+
+The server talks to one data provider, chosen with `DATA_PROVIDER` in `.env`. Every provider implements the same
+interface (`server/providers.js`), so the interface works the same with any of them.
+
+| `DATA_PROVIDER` | What it needs | Instruments |
+|---|---|---|
+| `ibkr` (default) | IB Gateway or TWS running and logged in ([setup](#ib-gateway-setup)) | Stocks/ETFs, indices, forex |
+| `alpaca` | An Alpaca account and API keys (paper or live) | US stocks and ETFs only |
+| `mock` | Nothing (same as `npm run mock`) | Simulated data |
+
+### `.env`
+
+Copy `.env.example` to `.env` and edit it. `.env` is git-ignored: **never commit real keys**. Variables exported in the
+shell take precedence over `.env` (for example `IB_PORT=4002 npm start` still works).
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DATA_PROVIDER` | `ibkr` | `ibkr`, `alpaca` or `mock` |
+| `APP_LANG` | `es` | Default UI language (`es` or `en`) |
+| `IB_HOST` / `IB_PORT` / `IB_CLIENT_ID` | `127.0.0.1` / `4001` / `17` | IB Gateway/TWS connection |
+| `ALPACA_API_KEY_ID` / `ALPACA_API_SECRET_KEY` | empty | Alpaca API keys |
+| `ALPACA_PAPER` | `1` | `1` = paper keys, `0` = live keys (they are different key pairs) |
+| `ALPACA_FEED` | `iex` | `iex` (free for every account) or `sip` (all US exchanges; free plans get it 15 min delayed) |
+| `USE_RTH`, `PORT` | `1`, `3000` | Regular trading hours only; local web port |
+
+### Alpaca setup
+
+1. Create an account at [alpaca.markets](https://alpaca.markets) (a paper account is enough for market data).
+2. In the dashboard, open **API Keys** and generate a key pair. Paper and live accounts have separate keys.
+3. In `.env`: `DATA_PROVIDER=alpaca`, the two keys, and `ALPACA_PAPER=0` only if they are live keys.
+4. `npm start`. The console prints `[alpaca] keys OK` and the status dot turns green.
+
+What to know about Alpaca:
+
+- **Read-only.** The app only makes GET requests to the market data, asset list and market clock endpoints. It never
+  calls orders, positions or account endpoints.
+- **No forex and no indices.** Alpaca serves FX data only to broker partners, so EUR.USD, GBP.USD, SPX… keep working
+  only with IBKR. Asking Alpaca for them shows an "Alpaca does not provide data for…" message in the panel.
+- **Search** uses Alpaca's list of active US equities (downloaded once, cached for 12 h) and matches symbol or name.
+- **IEX feed** (default) covers a single exchange, so volume is lower than the consolidated tape; prices and structure
+  are close to SIP. Use `ALPACA_FEED=sip` if your plan allows it.
+- **4H candles with regular hours** are built from 30-minute bars so they start at 9:30 and 13:30 New York, like IB's.
+  With `USE_RTH=0` Alpaca's own 4-hour bars are used.
+- Instrument ids: Alpaca has no IB `conId`, so the server derives a stable numeric id from the symbol. Stock favorites
+  saved with IBKR still open with Alpaca (bars are requested by symbol).
 
 ## IB Gateway setup
 
@@ -103,7 +152,7 @@ When reporting an IB error, include the exact code and text that IB returned.
 ## Language
 
 The interface and the guide are available in Spanish and English. The default language is set in `server/config.js`
-(`lang`, or `APP_LANG=en npm start`; Spanish if not set). Each browser can switch with the **ES/EN** selector in the
+(`lang`, from `APP_LANG=en` in `.env` or the shell; Spanish if not set). Each browser can switch with the **ES/EN** selector in the
 top bar: the choice is saved in the `ms_lang` cookie and the page reloads without losing the view.
 
 ## How structure is marked (rules in `public/js/structure.js`)
@@ -125,16 +174,19 @@ The right `n` depends on the timeframe and your judgment: if you see too much no
 - Regular trading hours by default (`USE_RTH=0` to include pre/post).
 - Times are shown in New York time (`DISPLAY_TZ` in `public/js/api.js`).
 - Without a data subscription, IB delivers delayed data or rejects some symbols (the panel shows IB's error).
-- IB limits historical requests (~60 / 10 min): the server caches and spaces out requests.
+- IB limits historical requests (~60 / 10 min): the server caches and spaces out requests. Alpaca's free plan allows
+  200 requests/min; bars are cached the same way.
+- The Alpaca provider is tested only against a fake API (no real keys were available while building it).
 - Favorites, indicators and language are cookies of the host `127.0.0.1`; if you open the app as `localhost` you won't see them.
 
 ## Layout
 
 ```
-server/   config.js · ib.js (IB client, cache, pacing) · forex.js · mock.js · index.js (Express)
+server/   config.js (reads .env) · providers.js (picks the provider) · ib.js (IBKR: cache, pacing) · alpaca.js (Alpaca)
+          forex.js · mock.js · index.js (Express)
 public/   index.html · css/ · js/ (app, panel, structure, indicators, help, examples, structurePrimitive, favorites, api, i18n)
           js/locales/ (es, en: UI text) · help.en.js · examples.en.js (English guide)
-test/     structure.test.js · indicators.test.js · forex.test.js · help.test.js
+test/     structure.test.js · indicators.test.js · forex.test.js · help.test.js · alpaca.test.js
 ```
 
 ## Optional indicators (**Indicators ▾** menu)

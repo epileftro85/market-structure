@@ -99,7 +99,7 @@ function generateBars(conId, tf, isFx) {
 export class MockClient {
   connect() {}
   shutdown() {}
-  status() { return { connected: true, mock: true, host: 'mock', port: 0, lastError: null }; }
+  status() { return { connected: true, mock: true, provider: 'Mock', target: 'mock', host: 'mock', port: 0, lastError: null }; }
   async searchSymbols(q) {
     const s = q.trim().toUpperCase();
     const stocks = SYMBOLS.filter((x) => x.symbol.startsWith(s) || x.name.includes(s)).map((x) => ({ ...x, hasFutures: false }));
