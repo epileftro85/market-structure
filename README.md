@@ -1,112 +1,175 @@
 # market-structure
 
-MVP para **aprender a marcar estructura de mercado** (no para operar): trae velas de Interactive Brokers y dibuja
-**HH / HL / LH / LL**, **BOS** y **CHoCH** en 4 temporalidades a la vez (1D, 4H, 15m, 10m).
+An MVP to **learn how to mark market structure** (not to trade): it pulls candles from Interactive Brokers and draws
+**HH / HL / LH / LL**, **BOS** and **CHoCH** on 4 timeframes at once (1D, 4H, 15m, 10m).
 
-- Node + Express en el servidor, navegador para la visualización ([lightweight-charts](https://github.com/tradingview/lightweight-charts)).
-- Cada pestaña del navegador es independiente: el estado vive en la URL (símbolo, layout, parámetros).
-- Buscador de símbolos contra IB y favoritos guardados en una cookie.
+- Node + Express on the server, the browser for the charts ([lightweight-charts](https://github.com/tradingview/lightweight-charts)).
+- Each browser tab is independent: its state lives in the URL (symbol, layout, parameters).
+- Symbol search against IB and favorites saved in a cookie.
+- Interface and guide in **Spanish and English** (see [Language](#language)).
 
-## Puesta en marcha
+> Educational tool only. It never sends orders and nothing in it is investment advice.
 
-1. **Abre IB Gateway** (no IBKR Desktop: esa app no expone la API) con tu cuenta **paper**.
-   En *Configure → Settings → API → Settings*:
-   - ✅ Enable ActiveX and Socket Clients
-   - Socket port: `4002` (Gateway paper) — `4001` live, `7497` TWS paper, `7496` TWS live
-   - Trusted IPs: `127.0.0.1`
-   - ✅ Read-Only API (este proyecto no envía órdenes)
-2. Instala y arranca:
-   ```bash
-   npm install
-   npm start            # usa IB en 127.0.0.1:4002
-   # IB_PORT=7497 npm start   ← si usas TWS paper
-   ```
-3. Abre <http://127.0.0.1:3000>.
+## Quick start
 
-**Sin IB** (para probar la interfaz con datos simulados): `npm run mock`.
+```bash
+npm install
+npm start            # connects to IB at 127.0.0.1:4001 (IB Gateway, live)
+# IB_PORT=4002 npm start   ← IB Gateway paper account
+# IB_PORT=7497 npm start   ← TWS paper
+npm run mock         # simulated data, no IB needed (to try the interface)
+npm test             # unit tests
+```
 
-**Idioma / Language.** La interfaz y la guía están en español e inglés. El idioma por defecto se define en
-`server/config.js` (`lang`, o `APP_LANG=en npm start`); cada navegador puede cambiarlo con el selector **ES/EN** de la barra
-(se guarda en la cookie `ms_lang` y recarga la página sin perder la vista).
-Tests de la lógica de estructura: `npm test`.
+Then open <http://127.0.0.1:3000>. The first time, set up IB Gateway as described below.
 
-## Uso
+## IB Gateway setup
 
-| Acción | Cómo |
+The app reads market data through the IB API, which is served by **IB Gateway** (or by TWS). IBKR Desktop and Client
+Portal do **not** expose the socket API, so they cannot be used for this.
+
+### 1. Download and install
+
+1. Go to <https://www.interactivebrokers.com/en/trading/ibgateway-stable.php> (Interactive Brokers site →
+   *Trading* → *Platforms* → *IB Gateway*).
+2. Pick the **Stable** version for your OS (macOS, Windows or Linux) and download the installer.
+3. Install it like any other app. On macOS, open the `.dmg` and run the installer; if macOS blocks it, allow it in
+   *System Settings → Privacy & Security*.
+
+### 2. Log in
+
+1. Open **IB Gateway**.
+2. Choose **IB API** (not *FIX CTCI*).
+3. Choose **Live Trading** or **Paper Trading** (the paper account has its own username, visible in Client Portal →
+   *Settings* → *Paper Trading Account*).
+4. Enter your IBKR username and password and approve the second factor (IBKR Mobile) if asked.
+
+**One session per user.** IBKR allows only one active session per username. If you log in to IB Gateway with the
+same user you use in IBKR Desktop, TWS or the mobile app, one of them gets disconnected. Options: use the paper account
+(its own username), create a secondary user for API access, or don't use both at the same time.
+
+### 3. API settings
+
+In IB Gateway: **Configure → Settings → API → Settings**.
+
+| Setting | Value |
 |---|---|
-| Buscar símbolo | Escribe en el buscador (↑↓ Enter). `Ctrl/⌘+Enter` lo abre en pestaña nueva |
-| Favorito | ★ junto al símbolo. Chips debajo de la barra: clic = cargar aquí, `↗` = pestaña nueva |
-| Layout 4 → 2 → 1 | Botón **Layout** o tecla `L` |
-| Qué temporalidad ver (layouts 2 y 1) | Chips `1D 4H 15m 10m` o clic en el título de un panel. Doble clic = maximizar |
-| Otro símbolo en paralelo | **Duplicar pestaña ↗** y cambia el símbolo en una de las dos |
-| Ajustar sensibilidad | `n` de cada panel (− / +) |
-| Ruptura por cierre o por mecha | Selector **Ruptura** |
+| Enable ActiveX and Socket Clients | ✅ (on by default in Gateway) |
+| **Read-Only API** | ✅ keep it on: this project never sends orders |
+| Socket port | `4001` live · `4002` paper (TWS: `7496` live · `7497` paper) |
+| Allow connections from localhost only | ✅ |
+| Trusted IPs | `127.0.0.1` |
 
-## Cómo se marca (reglas en `public/js/structure.js`)
+Click **Apply / OK**. The port must match the app: by default it uses `4001` (`server/config.js`); override it with
+`IB_PORT`. Other variables: `IB_HOST` (default `127.0.0.1`) and `IB_CLIENT_ID` (default `17`, must be unique among
+API clients connected to the same Gateway).
 
-- **Swing high/low**: máximo (mínimo) mayor (menor) que las `n` velas a cada lado. Se **confirma `n` velas después**,
-  por eso las marcas más recientes aparecen con retraso: es normal en cualquier indicador de swings.
-- **HH/LH, HL/LL**: cada swing se compara con el anterior de su mismo tipo.
-- **Ruptura** del último swing aún no roto:
-  - a favor de la tendencia vigente → **BOS**
-  - en contra → **CHoCH** (la tendencia pasa a la contraria)
-  - la primera ruptura del gráfico fija la tendencia y se marca como BOS.
+Optional, in **Configure → Settings → Lock and Exit**: IB Gateway restarts or logs off once a day; choose
+*Auto restart* so it stays connected.
 
-El `n` correcto depende de la temporalidad y de tu criterio: si ves demasiado ruido sube `n`; si faltan swings, bájalo.
+### 4. Start the app
 
-## Límites conocidos del MVP
+1. With IB Gateway logged in, run `npm start` (or `IB_PORT=4002 npm start` for paper).
+2. The console prints `market-structure → http://127.0.0.1:3000` and the IB host/port.
+3. Open that URL. The dot at the right of the top bar is **green** when connected to IB, **red** when not
+   (hover it to see the error), and **orange** in mock mode.
+4. Search for a symbol (`AAPL`, `SPY`, `EUR.USD`…) and choose it.
 
-- Soporta acciones/ETF (`STK`), índices (`IND`) y forex (`CASH`). **Futuros no** (requieren elegir vencimiento).
-- **Forex:** la búsqueda de texto de IB no devuelve pares, así que se ofrecen 14 pares IDEALPRO desde `server/forex.js` (EUR.USD, GBP.USD, USD.JPY…). Busca `EUR.USD`, `eurusd` o `gbp`. Para agregar más pares, edita esa lista.
-- Horario regular de mercado por defecto (`USE_RTH=0` para incluir pre/post).
-- Horas mostradas en hora de Nueva York (`DISPLAY_TZ` en `public/js/api.js`).
-- Sin suscripción de datos, IB entrega datos con retraso o rechaza algunos símbolos (el panel muestra el error de IB).
-- IB limita las peticiones históricas (~60 / 10 min): el servidor cachea y espacia las peticiones.
-- Los favoritos son una cookie del origen `127.0.0.1:3000`; si cambias de host/puerto no los verás.
+### Troubleshooting
 
-## Estructura
+| Symptom | What to check |
+|---|---|
+| Red dot, "Not connected to IB" | Gateway is open and logged in, the port in Gateway matches `IB_PORT`, *Enable ActiveX and Socket Clients* is on |
+| Connects and then drops | Another session with the same IBKR user (Desktop, TWS, mobile) took over; see *One session per user* |
+| "clientId already in use" | Another program uses the same client id: run with `IB_CLIENT_ID=<another number>` |
+| A panel shows an IB error about market data | Your account has no data subscription for that instrument. Without one, IB delivers delayed data or rejects some symbols. The panel shows IB's own message |
+| No candles outside market hours | Regular trading hours only by default: `USE_RTH=0 npm start` includes pre/post market |
+
+When reporting an IB error, include the exact code and text that IB returned.
+
+## Usage
+
+| Action | How |
+|---|---|
+| Search symbol | Type in the search box (↑↓ Enter). `Ctrl/⌘+Enter` opens it in a new tab |
+| Favorite | ★ next to the symbol. Chips below the bar: click = load here, `↗` = new tab |
+| Layout 4 → 2 → 1 | **Layout** button or the `L` key |
+| Which timeframe to show (layouts 2 and 1) | `1D 4H 15m 10m` chips or click a panel's title. Double click = maximize |
+| Another symbol side by side | **Duplicate tab ↗** and change the symbol in one of them |
+| Sensitivity | `n` of each panel (− / +) |
+| Break by close or by wick | **Break** selector |
+| Language | **ES / EN** selector |
+
+## Language
+
+The interface and the guide are available in Spanish and English. The default language is set in `server/config.js`
+(`lang`, or `APP_LANG=en npm start`; Spanish if not set). Each browser can switch with the **ES/EN** selector in the
+top bar: the choice is saved in the `ms_lang` cookie and the page reloads without losing the view.
+
+## How structure is marked (rules in `public/js/structure.js`)
+
+- **Swing high/low**: a high (low) higher (lower) than the `n` candles on each side. It is **confirmed `n` candles later**,
+  which is why the most recent marks appear with a delay: this is normal for any swing indicator.
+- **HH/LH, HL/LL**: each swing is compared with the previous one of the same type.
+- **Break** of the last swing not yet broken:
+  - with the current trend → **BOS**
+  - against it → **CHoCH** (the trend flips)
+  - the first break on the chart sets the trend and is marked as BOS.
+
+The right `n` depends on the timeframe and your judgment: if you see too much noise raise `n`; if swings are missing, lower it.
+
+## Known MVP limits
+
+- Supports stocks/ETFs (`STK`), indices (`IND`) and forex (`CASH`). **No futures** (they need an expiry).
+- **Forex:** IB's text search does not return currency pairs, so 14 IDEALPRO pairs are offered from `server/forex.js` (EUR.USD, GBP.USD, USD.JPY…). Search `EUR.USD`, `eurusd` or `gbp`. To add more pairs, edit that list.
+- Regular trading hours by default (`USE_RTH=0` to include pre/post).
+- Times are shown in New York time (`DISPLAY_TZ` in `public/js/api.js`).
+- Without a data subscription, IB delivers delayed data or rejects some symbols (the panel shows IB's error).
+- IB limits historical requests (~60 / 10 min): the server caches and spaces out requests.
+- Favorites, indicators and language are cookies of the host `127.0.0.1`; if you open the app as `localhost` you won't see them.
+
+## Layout
 
 ```
-server/   config.js · ib.js (cliente IB, caché, pacing) · forex.js · mock.js · index.js (Express)
+server/   config.js · ib.js (IB client, cache, pacing) · forex.js · mock.js · index.js (Express)
 public/   index.html · css/ · js/ (app, panel, structure, indicators, help, examples, structurePrimitive, favorites, api, i18n)
-          js/locales/ (es, en: textos de la interfaz) · help.en.js · examples.en.js (guía en inglés)
+          js/locales/ (es, en: UI text) · help.en.js · examples.en.js (English guide)
 test/     structure.test.js · indicators.test.js · forex.test.js · help.test.js
 ```
 
-## Indicadores opcionales (menú **Indicadores ▾**)
+## Optional indicators (**Indicators ▾** menu)
 
-Todos están **apagados por defecto**. Se guardan en la URL (así "Duplicar pestaña" copia la vista) y en la cookie
-`ms_ind` (una pestaña nueva sin parámetros recuerda tu último uso). Se aplican a los 4 paneles.
+All are **off by default**. They are saved in the URL (so "Duplicate tab" copies the view) and in the `ms_ind`
+cookie (a new tab without parameters remembers your last choice). They apply to all 4 panels.
 
-**Guía contextual (`?`).** Cada marca tiene un botón `?` (en el menú de indicadores, junto a HH/HL/LH/LL y BOS/CHoCH,
-y al lado del `n` de cada panel) y hay un botón **? Guía** en la barra superior. Abre un panel lateral con un diagrama,
-qué es, cómo leerlo, la regla exacta que aplica la app, qué practicar y sus límites. Desde la guía también puedes
-encender o apagar el indicador sin cerrarla; los gráficos se reajustan para seguir viéndose. `Esc` cierra.
-El contenido está en `public/js/help.js` y `examples.js` (en inglés: `help.en.js` y `examples.en.js`).
+**Contextual guide (`?`).** Every mark has a `?` button (in the indicators menu, next to HH/HL/LH/LL and BOS/CHoCH,
+and next to each panel's `n`) and there is a **? Guide** button in the top bar. It opens a side panel with a diagram,
+what it is, how to read it, the exact rule the app applies, what to practice and its limits. From the guide you can
+also turn the indicator on or off without closing it; the charts resize to stay visible. `Esc` closes it.
+The content is in `public/js/help.js` and `examples.js` (English: `help.en.js` and `examples.en.js`).
 
-Cada entrada de la guía incluye un **ejemplo paso a paso** con números ilustrativos: la situación, qué hacer en la app,
-los escenarios posibles ("si pasa A → cómo leerlo → qué comprobar"), qué medir y errores comunes. **EQH/EQL** tiene el
-más detallado, con 4 diagramas (cómo se forma, barrido, ruptura y dónde medir). Los ejemplos están en `public/js/examples.js`.
-Los números son ilustrativos, no estadísticas ni recomendaciones.
+Each guide entry includes a **step-by-step example** with illustrative numbers: the situation, what to do in the app,
+the possible scenarios ("if A happens → how to read it → what to check"), what to measure and common mistakes.
+**EQH/EQL** has the most detailed one, with 4 diagrams (how it forms, sweep, break and where to measure).
+The numbers are illustrative, not statistics or recommendations.
 
-| Indicador | Qué muestra | Regla exacta |
+| Indicator | What it shows | Exact rule |
 |---|---|---|
-| **FVG** | Hueco de 3 velas que el precio aún no cubrió | Alcista: `low[i] > high[i-2]`; bajista: `high[i] < low[i-2]`. Mínimo 0.25×ATR(14). Se oculta cuando una vela lo llena por completo. Máx. 10 recientes |
-| **Order Blocks** | Zona de la última vela contraria antes de una ruptura de estructura | Entre el swing roto y la ruptura se toma el extremo (mínimo en alcista); el OB es la última vela contraria en ese punto (hasta 2 velas antes). Se oculta cuando un **cierre** atraviesa la zona. Máx. 6 |
-| **EQH / EQL** | Máximos/mínimos casi iguales (liquidez) | Dos swings consecutivos del mismo tipo a ≤ 0.1×ATR. La línea se extiende hasta que se barre o se rompe. Máx. 8 |
-| **Sweeps** | Barrido de liquidez | La mecha supera un swing y la vela **cierra de vuelta** dentro. Si cierra más allá es ruptura (BOS/CHoCH), no sweep. Máx. 12 |
-| **Externa (n×3)** | Segunda escala de estructura | Mismo algoritmo con `n` triplicado; se dibuja con etiquetas tipo píldora y líneas gruesas encima de la interna |
-| **Niveles de TF mayor** | Guía de alineamiento top-down | En cada panel, swing high/low vigentes y última ruptura de las temporalidades superiores (1D morado, 4H cian, 15m lima). Si hace falta, carga en segundo plano paneles que no ves. Solo se ven si caen dentro del rango de precios visible |
-| **EMA 50 / 200** | Medias móviles exponenciales | Sembradas con SMA. La EMA 200 necesita 200 velas |
-| **VWAP (diario)** | Precio medio ponderado por volumen | Se reinicia cada día (hora de la bolsa). No aplica en 1D |
-| **Volumen** | Histograma inferior | Forex no tiene volumen (IB entrega MIDPOINT): el panel lo avisa |
+| **FVG** | A 3-candle gap price has not filled yet | Bullish: `low[i] > high[i-2]`; bearish: `high[i] < low[i-2]`. Minimum 0.25×ATR(14). Hidden when a candle fills it completely. Max. 10 recent |
+| **Order Blocks** | Zone of the last opposite candle before a break of structure | Between the broken swing and the break, the extreme is taken (the low in a bullish break); the OB is the last opposite candle at that point (up to 2 candles earlier). Hidden when a **close** goes through the zone. Max. 6 |
+| **EQH / EQL** | Nearly equal highs/lows (liquidity) | Two consecutive swings of the same type within ≤ 0.1×ATR. The line extends until it is swept or broken. Max. 8 |
+| **Sweeps** | Liquidity sweep | The wick takes out a swing and the candle **closes back** inside. If it closes beyond, it is a break (BOS/CHoCH), not a sweep. Max. 12 |
+| **External (n×3)** | Second structure scale | Same algorithm with `n` tripled; drawn with pill labels and thick lines over the internal one |
+| **Higher TF levels** | Top-down alignment aid | On each panel, the active swing high/low and last break of the higher timeframes (1D purple, 4H cyan, 15m lime). Loads hidden panels in the background if needed. Only visible if inside the visible price range |
+| **EMA 50 / 200** | Exponential moving averages | Seeded with an SMA. EMA 200 needs 200 candles |
+| **VWAP (daily)** | Volume-weighted average price | Resets every day (exchange time). Not applicable on 1D |
+| **Volume** | Bottom histogram | Forex has no volume (IB returns MIDPOINT): the panel says so |
 
-Las zonas y niveles son una **ayuda visual para practicar**; con todo activado el gráfico se satura, por eso conviene
-encender uno o dos a la vez.
+Zones and levels are a **visual aid for practice**; with everything on the chart gets crowded, so turn on one or two at a time.
 
-## 📝 Pendiente por aprender
+## 📝 Still to learn
 
-- **Rol de cada temporalidad (análisis top-down).** El MVP trata las 4 temporalidades con el mismo peso porque el objetivo
-  es solo aprender a marcar. Aún hay que entender cómo se usan juntas: 1D = sesgo general, 4H = estructura relevante,
-  15m = confirmación, 10m = ejecución fina. Estudiar: ¿qué CHoCH/BOS de una temporalidad menor "cuenta" solo si
-  está alineado con la mayor? Cuando esto quede claro, se puede diseñar un layout que dé más peso a una de ellas.
+- **Role of each timeframe (top-down analysis).** The MVP gives the 4 timeframes the same weight because the goal is
+  only to learn how to mark. It is still to be understood how they are used together: 1D = overall bias, 4H = relevant
+  structure, 15m = confirmation, 10m = fine execution. To study: which CHoCH/BOS on a lower timeframe "counts" only if
+  it is aligned with the higher one? Once this is clear, a layout that gives more weight to one of them can be designed.

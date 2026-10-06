@@ -1,216 +1,218 @@
 # AGENTS.md
 
-Contexto para cualquier IA (o persona) que trabaje en este repositorio. Léelo completo antes de cambiar nada.
-Idioma de trabajo con el usuario: **español**. Identificadores de código, comentarios técnicos breves y nombres de archivo: como ya están en el repo.
+Context for any AI (or person) working in this repository. Read it in full before changing anything.
+Language when talking to the user: **Spanish**. Code, comments and docs in the repo: English.
 
-Última actualización: 2026-10-06 (i18n es/en).
-
----
-
-## 1. Qué es este proyecto
-
-**market-structure** es un MVP para **aprender a marcar estructura de mercado**, no para operar.
-Trae velas de Interactive Brokers (IB) y dibuja sobre ellas, en 4 temporalidades a la vez (1D, 4H, 15m, 10m):
-
-- Swings y etiquetas **HH / HL / LH / LL**
-- **BOS** (Break of Structure) y **CHoCH** (Change of Character)
-- Indicadores opcionales (todos *toggleables*): FVG, Order Blocks, EQH/EQL, Sweeps, estructura externa (n×3),
-  niveles de temporalidades mayores, EMA 50/200, VWAP diario y volumen
-- Una **guía contextual** (botones `?`) con diagramas, la regla exacta que usa la app y ejemplos paso a paso
-
-Se usa en el navegador (servidor Node local + páginas estáticas). Cada pestaña es independiente: puede mostrar otro símbolo.
-
-### Objetivo de fondo
-Que el usuario **entrene el ojo**: aprender qué es cada marca, cómo se mide y cómo se interpreta, comparando lo que
-él marcaría con lo que marca el algoritmo.
-
-### Lo que NO es (no-objetivos)
-- **No es un sistema de trading.** No envía órdenes, no da señales de compra/venta, no hace backtesting de rentabilidad.
-- No es asesoramiento financiero. La guía y los ejemplos lo dicen explícitamente; mantén esa postura.
-- No pretende ser la definición "correcta" de cada concepto: las definiciones son las de esta app y entre traders varían.
+Last updated: 2026-10-06.
 
 ---
 
-## 2. Perfil del usuario
+## 1. What this project is
 
-Solo se incluye lo que el usuario ha dicho o lo que se deduce directamente de la conversación. **No rellenes huecos con suposiciones.**
+**market-structure** is an MVP for **learning to mark market structure**, not for trading.
+It pulls candles from Interactive Brokers (IB) and draws on top of them, on 4 timeframes at once (1D, 4H, 15m, 10m):
 
-**Lo que sabemos**
-- Hispanohablante, zona horaria **America/Bogotá (UTC−5)**. Trabaja en **macOS** (rutas `/Users/anclavijo/...`).
-- Quiere **aprender a marcar estructura, no entrar todavía** al mercado: "solo aprender a marcar".
-- Conceptos con los que trabaja: ChoCH, BOS, HH/HL/LH/LL, EQH, top-down entre 1D / 4H / 15m / 10m. Pidió ayuda para entender
-  EQH y dijo que necesita aprender más sobre el **rol de cada temporalidad** (análisis top-down). Eso está anotado como
-  "Pendiente por aprender" en el README.
-- Instrumentos que ha buscado: **EUR.USD y GBP.USD** (forex). No está confirmado qué más estudia (las pruebas del repo usan también acciones como AAPL, por conveniencia).
-- Tiene **IBKR Desktop** e **IB Gateway** instalados. IBKR solo permite **una sesión por usuario**, así que no puede tener
-  Desktop y Gateway con el mismo usuario a la vez (ver §8).
-- Preferencias técnicas declaradas: **Node, JavaScript plano (sin TypeScript)**, "sencillo y práctico", MVP, visualización en el navegador.
-- Pidió favoritos guardados en **cookie** y un **buscador de símbolos de IB**.
-- Pidió que los extras sean **opcionales (toggleables)** y que las explicaciones vengan con **ejemplos concretos**:
-  qué hacer, qué medir, qué interpretar.
-- En `server/config.js` cambió el puerto de IB por defecto a **4001** (IB Gateway *live*). No lo revertir ni "corregir" sin preguntar.
+- Swings and **HH / HL / LH / LL** labels
+- **BOS** (Break of Structure) and **CHoCH** (Change of Character)
+- Optional indicators (all *toggleable*): FVG, Order Blocks, EQH/EQL, Sweeps, external structure (n×3),
+  higher-timeframe levels, EMA 50/200, daily VWAP and volume
+- A **contextual guide** (`?` buttons) with diagrams, the exact rule the app uses, and step-by-step examples
 
-**Lo que NO sabemos (no lo asumas)**
-- Su nivel de experiencia, capital, si opera en real, qué broker usa para ejecutar, ni si usa cuenta paper o real en Gateway
-  (el puerto 4001 sugiere real, pero no está confirmado).
-- Qué definición de Order Block, FVG o liquidez prefiere (la app implementa una; ver §6).
+It runs in the browser (local Node server + static pages). Each tab is independent: it can show a different symbol.
+
+### Underlying goal
+Help the user **train their eye**: learn what each mark is, how it is measured and how it is interpreted, by comparing what
+they would mark with what the algorithm marks.
+
+### What it is NOT (non-goals)
+- **It is not a trading system.** It sends no orders, gives no buy/sell signals, and does no profitability backtesting.
+- It is not financial advice. The guide and examples say so explicitly; keep that stance.
+- It does not claim to be the "correct" definition of each concept: the definitions are this app's, and they vary between traders.
 
 ---
 
-## 3. Cómo colaborar con este usuario
+## 2. User profile
 
-- Responde en **español**, directo y sin relleno. Explica el *porqué* de una decisión en una o dos frases.
-- **Pregunta antes de construir** cuando haya varias formas razonables y cada una añade complejidad (se hizo con el menú de indicadores).
-- Si algo **no se pudo probar**, dilo. Hoy lo no verificado es todo lo que requiere IB real (ver §7).
-- Prefiere lo simple. No introduzcas frameworks, bundlers, TypeScript ni bases de datos sin que lo pida.
-- Todo extra visual va **apagado por defecto** y con su `?` en la guía.
-- Cuando expliques conceptos de mercado: ejemplo con números, qué medir, escenarios "si pasa A → lectura → qué comprobar",
-  y errores comunes. Aclara que los números son **ilustrativos**.
-- No des opiniones de inversión ("compra aquí", "esto va a subir"). Describe qué mirar y cómo registrar resultados.
-- Antes de **sobrescribir un archivo** que el usuario pueda haber editado, compara el contenido con lo último entregado.
+Only what the user has said, or what follows directly from the conversation, is included. **Do not fill gaps with assumptions.**
+
+**What we know**
+- Spanish speaker, time zone **America/Bogotá (UTC−5)**. Works on **macOS** (paths `/Users/anclavijo/...`).
+- Wants to **learn to mark structure, not enter** the market yet: "solo aprender a marcar" ("just learn to mark").
+- Concepts they work with: ChoCH, BOS, HH/HL/LH/LL, EQH, top-down across 1D / 4H / 15m / 10m. Asked for help understanding
+  EQH and said they need to learn more about the **role of each timeframe** (top-down analysis). This is noted under
+  "Pending to learn" in the README.
+- Instruments they have searched for: **EUR.USD and GBP.USD** (forex). It is not confirmed what else they study (the repo's tests also use stocks such as AAPL, for convenience).
+- Has **IBKR Desktop** and **IB Gateway** installed. IBKR only allows **one session per user**, so they cannot have
+  Desktop and Gateway open with the same user at the same time (see §8).
+- Stated technical preferences: **Node, plain JavaScript (no TypeScript)**, "sencillo y práctico" ("simple and practical"), MVP, visualization in the browser.
+- Asked for favorites stored in a **cookie** and an **IB symbol search**.
+- Asked for extras to be **optional (toggleable)** and for explanations to come with **concrete examples**:
+  what to do, what to measure, what to interpret.
+- In `server/config.js` they changed the default IB port to **4001** (IB Gateway *live*). Do not revert or "fix" it without asking.
+
+**What we do NOT know (do not assume)**
+- Their experience level, capital, whether they trade live, which broker they use for execution, or whether they use a paper or live account in Gateway
+  (port 4001 suggests live, but this is not confirmed).
+- Which definition of Order Block, FVG or liquidity they prefer (the app implements one; see §6).
 
 ---
 
-## 4. Stack y arquitectura
+## 3. How to collaborate with this user
+
+- Reply in **Spanish**, direct and without filler. Explain the *why* of a decision in one or two sentences.
+- **Ask before building** when there are several reasonable approaches and each adds complexity (this was done with the indicators menu).
+- If something **could not be tested**, say so. Today, everything that requires real IB is unverified (see §7).
+- Prefer simple. Do not introduce frameworks, bundlers, TypeScript or databases unless asked.
+- Every visual extra is **off by default** and has its `?` in the guide.
+- When explaining market concepts: an example with numbers, what to measure, scenarios "if A happens → reading → what to check",
+  and common mistakes. Make clear the numbers are **illustrative**.
+- Do not give investment opinions ("buy here", "this will go up"). Describe what to look at and how to record results.
+- Before **overwriting a file** the user may have edited, compare its content with the last version delivered.
+
+---
+
+## 4. Stack and architecture
 
 ```
-IB Gateway / TWS (local)  ──socket TCP──▶  Servidor Node (Express)  ──HTTP JSON──▶  Navegador (N pestañas)
-        puerto 4001 (cfg)                  server/                                   public/ (ES modules)
+IB Gateway / TWS (local)  ──TCP socket──▶  Node server (Express)  ──HTTP JSON──▶  Browser (N tabs)
+        port 4001 (cfg)                    server/                                public/ (ES modules)
 ```
 
-- **Node ≥ 18**, ESM (`"type": "module"`). Dependencias: `express`, `@stoqey/ib`, `lightweight-charts` (v5, se sirve desde
-  `node_modules` en `/vendor`, sin CDN). Sin build step.
-- **Un solo servidor, una sola conexión a IB**, compartida por todas las pestañas. Escucha solo en `127.0.0.1`.
-- Estado de cada pestaña **en la URL** (símbolo, layout, `n` por panel, modo de ruptura, indicadores). "Duplicar pestaña" copia la URL.
-- Cookies: `ms_favs` (favoritos), `ms_ind` (último uso de indicadores) y `ms_lang` (idioma elegido con el botón ES/EN). Son del **host** `127.0.0.1` (no dependen del puerto): si el usuario abre la app como `localhost`, no verá las mismas cookies.
+- **Node ≥ 18**, ESM (`"type": "module"`). Dependencies: `express`, `@stoqey/ib`, `lightweight-charts` (v5, served from
+  `node_modules` at `/vendor`, no CDN). No build step.
+- **One server, one IB connection**, shared by all tabs. Listens only on `127.0.0.1`.
+- Each tab's state lives **in the URL** (symbol, layout, `n` per panel, break mode, indicators). "Duplicate tab" copies the URL.
+- Cookies: `ms_favs` (favorites), `ms_ind` (last-used indicators) and `ms_lang` (language chosen with the ES/EN button). They belong to the **host** `127.0.0.1` (not port-specific): if the user opens the app as `localhost`, they will not see the same cookies.
 
 ```
 server/
-  config.js      puertos, TIMEFRAMES (barSize/duration/ttl), useRTH, límites de IB
-  ib.js          cliente IB: conexión/reconexión, búsqueda, histórico, caché, cola (pacing), forex
-  forex.js       lista de pares IDEALPRO y búsqueda (reqMatchingSymbols NO devuelve forex)
-  mock.js        datos simulados (MOCK=1) para probar la interfaz sin IB
-  index.js       Express: /api/status, /api/search, /api/bars, estáticos
+  config.js      ports, TIMEFRAMES (barSize/duration/ttl), useRTH, IB limits
+  ib.js          IB client: connect/reconnect, search, historical data, cache, queue (pacing), forex
+  forex.js       list of IDEALPRO pairs and search (reqMatchingSymbols does NOT return forex)
+  mock.js        simulated data (MOCK=1) to test the UI without IB
+  index.js       Express: /api/status, /api/search, /api/bars, static files
 public/
   index.html · css/style.css
-  js/app.js                 estado en URL, layout 4/2/1, buscador, favoritos, menú de indicadores, guía
-  js/panel.js               un panel = una temporalidad (gráfico, series, estructura, indicadores)
-  js/structure.js           swings, HH/HL/LH/LL, BOS, CHoCH   ← PURO, con tests
-  js/indicators.js          ATR, EMA, VWAP, FVG, OB, EQH/EQL, Sweeps ← PURO, con tests
-  js/structurePrimitive.js  dibujo sobre el canvas del gráfico (zonas abajo, marcas arriba)
-  js/help.js · js/examples.js   contenido de la guía y de los ejemplos (solo datos) + diagramas SVG
-  js/help.en.js · js/examples.en.js   la misma guía y ejemplos en inglés (mismas claves)
-  js/i18n.js · js/locales/{es,en}.js   idioma activo, t('clave') y textos de la interfaz
-  js/api.js · js/favorites.js   cliente del backend / cookie de favoritos
+  js/app.js                 URL state, 4/2/1 layout, search, favorites, indicators menu, guide
+  js/panel.js               one panel = one timeframe (chart, series, structure, indicators)
+  js/structure.js           swings, HH/HL/LH/LL, BOS, CHoCH   ← PURE, with tests
+  js/indicators.js          ATR, EMA, VWAP, FVG, OB, EQH/EQL, Sweeps ← PURE, with tests
+  js/structurePrimitive.js  drawing on the chart canvas (zones below, marks on top)
+  js/help.js · js/examples.js   guide and examples content in Spanish (data only) + SVG diagrams
+  js/help.en.js · js/examples.en.js   the same guide and examples in English (same keys)
+  js/i18n.js · js/locales/{es,en}.js   active language, t('key') and UI strings
+  js/api.js · js/favorites.js   backend client / favorites cookie
 test/                       node:test (structure, indicators, forex, help)
 ```
 
-**Idiomas (i18n)**: español (por defecto) e inglés. `public/js/i18n.js` decide el idioma al cargar: cookie `ms_lang`
-(botón ES/EN de la barra) o, si no hay, `lang` de `server/config.js` (`APP_LANG`), que llega por `/api/status`.
-Todo texto de interfaz nuevo va como clave en `locales/es.js` **y** `locales/en.js` (un test compara las claves) y se usa con `t('clave')`;
-en el HTML estático, con `data-i18n` / `data-i18n-title` / `data-i18n-placeholder` / `data-i18n-aria-label`.
-Las etiquetas de mercado (HH, BOS, CHoCH, FVG, OB, sweep…) no se traducen. Los errores que manda IB se muestran tal cual.
-Ojo: no nombres `t` a una variable local en `app.js` / `panel.js` (taparía la función de traducción).
+**Languages (i18n)**: Spanish (default) and English. Spanish UI/guide content lives in `locales/es.js`, `help.js` and `examples.js`;
+English in `locales/en.js`, `help.en.js` and `examples.en.js`. `public/js/i18n.js` picks the language on load: the `ms_lang` cookie
+(ES/EN button in the toolbar) or, if absent, `lang` from `server/config.js` (`APP_LANG`), delivered via `/api/status`.
+Every new UI string goes in as a key in `locales/es.js` **and** `locales/en.js` (a test compares the keys) and is used via `t('key')`;
+in static HTML, via `data-i18n` / `data-i18n-title` / `data-i18n-placeholder` / `data-i18n-aria-label`.
+Market labels (HH, BOS, CHoCH, FVG, OB, sweep…) are not translated. Errors sent by IB are shown as-is.
+Careful: do not name a local variable `t` in `app.js` / `panel.js` (it would shadow the translation function).
 
-Flujo de datos: `app.js` pide barras por panel → `api.js` normaliza (tiempo desplazado a hora de Nueva York) →
-`panel.js` llama a `detectStructure` e indicadores → `structurePrimitive.js` dibuja.
+Data flow: `app.js` requests bars per panel → `api.js` normalizes (time shifted to New York time) →
+`panel.js` calls `detectStructure` and the indicators → `structurePrimitive.js` draws.
 
 ---
 
-## 5. Comandos
+## 5. Commands
 
 ```bash
 npm install
-npm start        # IB en 127.0.0.1:4001 (por defecto en config.js). IB_PORT=4002 npm start para Gateway paper
-npm run mock     # datos simulados, sin IB
-npm test         # node --test  (debe pasar completo antes de entregar cualquier cambio)
+npm start        # IB at 127.0.0.1:4001 (default in config.js). IB_PORT=4002 npm start for Gateway paper
+npm run mock     # simulated data, no IB
+npm test         # node --test  (must pass in full before delivering any change)
 ```
 
-Variables de entorno útiles: `IB_PORT`, `IB_HOST`, `IB_CLIENT_ID` (17), `PORT` (3000), `USE_RTH=0` (incluye pre/post), `MOCK=1`, `APP_LANG=en` (idioma por defecto; `es` si no se indica).
-Puertos de IB: Gateway live 4001 / paper 4002; TWS live 7496 / paper 7497.
+Useful environment variables: `IB_PORT`, `IB_HOST`, `IB_CLIENT_ID` (17), `PORT` (3000), `USE_RTH=0` (includes pre/post market), `MOCK=1`, `APP_LANG=en` (default language; `es` if not set).
+IB ports: Gateway live 4001 / paper 4002; TWS live 7496 / paper 7497.
+Installing and running IB Gateway (download, login, API settings, ports): see the "IB Gateway setup" section of `README.md`.
 
 ---
 
-## 6. Definiciones y decisiones que NO deben cambiar sin avisar
+## 6. Definitions and decisions that must NOT change without notice
 
-Si cambias una regla, actualiza a la vez: el código, `help.js`, `examples.js` (y sus versiones `.en.js`), el README y los tests.
+If you change a rule, update all of these together: the code, `help.js`, `examples.js` (and their `.en.js` versions), the README and the tests.
 
-**Estructura (`structure.js`)**
-- Swing high: máximo mayor que las `n` velas anteriores (estricto) y `≥` las `n` posteriores. Swing low: simétrico.
-  Un swing se **confirma `n` velas después** (esto es inherente y está documentado al usuario).
-- Etiquetas: cada swing se compara con el anterior **del mismo tipo** (HH/LH en máximos, HL/LL en mínimos). El primero de cada tipo no lleva etiqueta.
-- Ruptura del último swing aún no roto: a favor de la tendencia → **BOS**; en contra → **CHoCH**. La primera ruptura fija la tendencia y se marca BOS.
-- Modo `close` (por defecto) o `wick`. El resultado incluye `active.high/low` (niveles vigentes, los usan los niveles de TF mayor).
+**Structure (`structure.js`)**
+- Swing high: a high greater than the previous `n` candles (strict) and `≥` the next `n`. Swing low: symmetric.
+  A swing is **confirmed `n` candles later** (this is inherent and documented to the user).
+- Labels: each swing is compared with the previous one **of the same type** (HH/LH for highs, HL/LL for lows). The first of each type gets no label.
+- Break of the last not-yet-broken swing: with the trend → **BOS**; against it → **CHoCH**. The first break sets the trend and is marked BOS.
+- `close` mode (default) or `wick`. The result includes `active.high/low` (current levels, used by the higher-TF levels).
 
-**Indicadores (`indicators.js`)** — constantes en `panel.js` (`MAX`, `EXT_FACTOR = 3`)
-- **FVG**: `low[i] > high[i-2]` (alcista) / `high[i] < low[i-2]` (bajista), tamaño mínimo `0.25 × ATR(14)`; desaparece cuando una vela lo llena por completo. Máx. 10 recientes.
-- **Order Block**: tras cada BOS/CHoCH se toma el extremo entre el swing roto y la ruptura; el OB es la última vela contraria ahí (hasta 2 antes). Se muestra completo (mecha a mecha). Mitigado cuando un **cierre** lo atraviesa. Máx. 6.
-- **EQH/EQL**: dos swings consecutivos del mismo tipo con diferencia `≤ 0.1 × ATR(14)`. Termina en barrido o ruptura. Máx. 8.
-- **Sweep**: la mecha supera un swing y la vela cierra de vuelta dentro (si cierra más allá es ruptura). Cada swing da como mucho un sweep.
-  La vela que **forma** un EQH (segundo máximo casi igual) **no** cuenta como sweep, y una vela que barre varios niveles se marca una sola vez. Máx. 12.
-- **Externa**: mismo algoritmo con `n × 3`. **Niveles de TF mayor**: cada panel recibe solo las temporalidades superiores (1D no recibe nada).
-- **VWAP** diario (no aplica en 1D ni sin volumen). **Volumen**: forex no tiene (IB entrega MIDPOINT; los `-1` de IB se normalizan a 0).
+**Indicators (`indicators.js`)** — constants in `panel.js` (`MAX`, `EXT_FACTOR = 3`)
+- **FVG**: `low[i] > high[i-2]` (bullish) / `high[i] < low[i-2]` (bearish), minimum size `0.25 × ATR(14)`; disappears when a candle fills it completely. Max. 10 most recent.
+- **Order Block**: after each BOS/CHoCH, take the extreme between the broken swing and the break; the OB is the last opposite candle there (up to 2 before). Shown in full (wick to wick). Mitigated when a **close** goes through it. Max. 6.
+- **EQH/EQL**: two consecutive swings of the same type differing by `≤ 0.1 × ATR(14)`. Ends on a sweep or a break. Max. 8.
+- **Sweep**: the wick goes beyond a swing and the candle closes back inside (if it closes beyond, it is a break). Each swing yields at most one sweep.
+  The candle that **forms** an EQH (second near-equal high) does **not** count as a sweep, and a candle that sweeps several levels is marked only once. Max. 12.
+- **External**: same algorithm with `n × 3`. **Higher-TF levels**: each panel receives only the higher timeframes (1D receives nothing).
+- Daily **VWAP** (not applied on 1D or without volume). **Volume**: forex has none (IB delivers MIDPOINT; IB's `-1` values are normalized to 0).
 
-**Tiempos**: lightweight-charts dibuja en UTC; las velas se desplazan por el offset de `America/New_York` (`DISPLAY_TZ` en `api.js`). La vela diaria se alinea a medianoche de su día.
+**Times**: lightweight-charts draws in UTC; candles are shifted by the `America/New_York` offset (`DISPLAY_TZ` in `api.js`). The daily candle is aligned to midnight of its day.
 
 ---
 
-## 7. Estado de verificación (sé honesto con esto)
+## 7. Verification status (be honest about this)
 
-| Parte | Estado |
+| Part | Status |
 |---|---|
-| Lógica de estructura e indicadores | Cubierta por tests (`npm test`) |
-| Interfaz (layouts, menú, guía, favoritos, cursor sincronizado, cookies) | Probada en Chromium headless con datos simulados |
-| Cliente IB (búsqueda, histórico, forex) | Probado **solo contra un IB falso** que emite los mismos eventos; verificado contra los typings de `@stoqey/ib` |
-| **Conexión con IB Gateway real** | **No verificada por la IA.** Las pruebas reales las hace el usuario |
-| Permisos de datos para forex/acciones en su cuenta | Desconocido: IB puede rechazar series sin suscripción (el panel muestra el error de IB) |
+| Structure and indicator logic | Covered by tests (`npm test`) |
+| UI (layouts, menu, guide, favorites, synced crosshair, cookies) | Tested in headless Chromium with simulated data |
+| IB client (search, historical data, forex) | Tested **only against a fake IB** that emits the same events; checked against the `@stoqey/ib` typings |
+| **Connection to a real IB Gateway** | **Not verified by the AI.** Real testing is done by the user |
+| Data permissions for forex/stocks on their account | Unknown: IB may reject series without a subscription (the panel shows IB's error) |
 
-Si el usuario reporta un error de IB, pídele el mensaje exacto (código y texto) antes de especular.
-
----
-
-## 8. Cosas que ya nos mordieron (gotchas)
-
-- `reqMatchingSymbols` **no devuelve pares de forex**. Se resuelven con una lista (`forex.js`) y `reqContractDetails` para obtener el `conId`.
-- Forex usa `MIDPOINT` (no `TRADES`) y no tiene volumen; las barras diarias pueden llegar como `yyyymmdd` (se normaliza en `ib.js`).
-- Fin de histórico en `@stoqey/ib`: un evento `historicalData` cuyo `time` empieza con `finished`. Errores informativos 2100–2999 no son fallos (`isNonFatalError`).
-- IB limita ~60 peticiones históricas por 10 min: hay caché con TTL y cola con pausa (`historicalGapMs`). No lo quites.
-- **Una sesión por usuario en IBKR**: el mismo usuario no puede estar a la vez en IBKR Desktop y en Gateway. Opciones: cuenta paper con usuario propio,
-  usuario secundario, o (con datos compartidos) renunciar a usar los datos en ambos a la vez. No uses Client Portal con el mismo usuario que Gateway.
-- Cookies compartidas entre pestañas; los cambios de una pestaña llegan a las demás al recuperar el foco.
-- Un `Number('')` es `0`: al leer parámetros de la URL usa `parseInt` y valida (ya hubo un bug así con `n`).
-- Un test que falló por un dato mal construido no siempre indica un bug del código: revisa el dato antes de "arreglar" la lógica.
+If the user reports an IB error, ask for the exact message (code and text) before speculating.
 
 ---
 
-## 9. Seguridad y límites (reglas duras)
+## 8. Things that already bit us (gotchas)
 
-1. **Nunca** añadas envío de órdenes, ni modificación de cuenta, ni endpoints que ejecuten acciones de trading. Este proyecto es solo lectura.
-2. Mantén el servidor en **`127.0.0.1`**; no lo expongas a la red. En Gateway, el usuario debe mantener **Read-Only API** activado.
-3. No registres, subas ni compartas credenciales, números de cuenta ni datos de posiciones.
-4. Contenido educativo: mantén los avisos de "ilustrativo / no es recomendación de inversión".
-5. No insertes datos externos como HTML sin escapar: la UI usa `textContent`; el SVG de los diagramas es propio y estático (hay un test que lo comprueba).
-6. Respeta la atribución de `lightweight-charts` (el logo de TradingView se muestra por defecto; no lo ocultes).
-
----
-
-## 10. Trabajo pendiente e ideas (no prometido; confirmar con el usuario antes)
-
-- **Registro de observaciones**: apuntar cada EQH/sweep/FVG con sus medidas (distancia en ATR, mecha, cierre, resultado) para que el usuario aprenda de sus propios casos.
-- **Modo práctica**: el usuario marca swings/CHoCH con clics y luego se compara con lo que marcó el algoritmo.
-- Toggles **por panel** (hoy aplican a los 4 paneles a la vez).
-- Layout con más peso a una temporalidad (cuando el usuario aclare el "rol" de cada una; ver README).
-- Futuros (requieren elegir vencimiento), más pares de forex (editar `FOREX_PAIRS`), sesiones (Asia/Londres/NY) y niveles del día/semana anterior.
-- Pruebas contra IB real en cuanto el usuario pueda aportar resultados (códigos de error de permisos de datos, `reqContractDetails` de forex, etc.).
+- `reqMatchingSymbols` **does not return forex pairs**. They are resolved with a list (`forex.js`) and `reqContractDetails` to get the `conId`.
+- Forex uses `MIDPOINT` (not `TRADES`) and has no volume; daily bars may arrive as `yyyymmdd` (normalized in `ib.js`).
+- End of historical data in `@stoqey/ib`: a `historicalData` event whose `time` starts with `finished`. Informational errors 2100–2999 are not failures (`isNonFatalError`).
+- IB limits ~60 historical requests per 10 min: there is a TTL cache and a queue with a pause (`historicalGapMs`). Do not remove them.
+- **One session per user at IBKR**: the same user cannot be logged into IBKR Desktop and Gateway at the same time. Options: a paper account with its own user,
+  a secondary user, or (with shared data) giving up on using the data in both at once. Do not use Client Portal with the same user as Gateway.
+- Cookies are shared between tabs; changes from one tab reach the others when they regain focus.
+- `Number('')` is `0`: when reading URL parameters use `parseInt` and validate (there was already a bug like this with `n`).
+- A test that failed because of badly built data does not always indicate a code bug: check the data before "fixing" the logic.
 
 ---
 
-## 11. Reglas para cambiar código
+## 9. Security and limits (hard rules)
 
-1. Mantén la lógica de detección **pura** (sin DOM ni Node) para poder testearla.
-2. Todo indicador nuevo: función pura + tests en `test/`, entrada en `help.js` **y** `examples.js` y en sus versiones `.en.js` (hay tests que exigen que existan, estén completas y tengan la misma forma en ambos idiomas),
-   interruptor en el menú, clave en `IND_KEYS` de `app.js` (y la copia de esa lista en `test/help.test.js`), y fila en la tabla del README.
-3. Corre `npm test` antes de entregar. Si tocas la interfaz, pruébala en un navegador headless con `npm run mock` y mira una captura.
-4. No cambies `server/config.js` (puerto, clientId) sin preguntar: el usuario lo ajustó a su entorno.
-5. Actualiza el README y este archivo cuando cambie algo de lo descrito aquí.
-6. Cambios pequeños y verificables; evita refactors amplios sin que se pidan.
+1. **Never** add order submission, account modification, or endpoints that perform trading actions. This project is read-only.
+2. Keep the server on **`127.0.0.1`**; do not expose it to the network. In Gateway, the user must keep **Read-Only API** enabled.
+3. Do not log, upload or share credentials, account numbers or position data.
+4. Educational content: keep the "illustrative / not investment advice" disclaimers.
+5. Do not insert external data as unescaped HTML: the UI uses `textContent`; the diagram SVG is our own and static (a test checks this).
+6. Respect the `lightweight-charts` attribution (the TradingView logo is shown by default; do not hide it).
+
+---
+
+## 10. Pending work and ideas (not promised; confirm with the user first)
+
+- **Observation log**: record each EQH/sweep/FVG with its measurements (distance in ATR, wick, close, outcome) so the user learns from their own cases.
+- **Practice mode**: the user marks swings/CHoCH with clicks and then compares with what the algorithm marked.
+- **Per-panel** toggles (today they apply to all 4 panels at once).
+- Layout giving more weight to one timeframe (once the user clarifies the "role" of each; see README).
+- Futures (require choosing an expiry), more forex pairs (edit `FOREX_PAIRS`), sessions (Asia/London/NY) and previous day/week levels.
+- Testing against real IB as soon as the user can provide results (data-permission error codes, forex `reqContractDetails`, etc.).
+
+---
+
+## 11. Rules for changing code
+
+1. Keep the detection logic **pure** (no DOM, no Node) so it can be tested.
+2. Every new indicator: pure function + tests in `test/`, an entry in `help.js` **and** `examples.js` and in their `.en.js` versions (tests require them to exist, be complete and have the same shape in both languages),
+   a switch in the menu, a key in `IND_KEYS` in `app.js` (and in the copy of that list in `test/help.test.js`), and a row in the README table.
+3. Run `npm test` before delivering. If you touch the UI, test it in a headless browser with `npm run mock` and look at a screenshot.
+4. Do not change `server/config.js` (port, clientId) without asking: the user adjusted it to their environment.
+5. Update the README and this file when anything described here changes.
+6. Small, verifiable changes; avoid broad refactors unless asked.
