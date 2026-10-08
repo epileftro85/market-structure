@@ -9,6 +9,8 @@ import { LANG, t } from './i18n.js';
 export const EXT_FACTOR = 3;
 /** Maximum number of recent zones/levels drawn (to avoid cluttering the chart). */
 const MAX = { fvg: 10, ob: 6, eq: 8, sweep: 12 };
+// Initial space per candle in px: each panel shows as many candles as fit its width
+const BAR_SPACING = 10;
 const HTF_COLORS = { '1D': '#c084fc', '4H': '#22d3ee', '15m': '#a3e635' };
 const LINE_COLORS = { ema50: '#93c5fd', ema200: '#e2e8f0', vwap: '#fbbf24' };
 
@@ -86,7 +88,7 @@ export class Panel {
       grid: { vertLines: { color: THEME.grid }, horzLines: { color: THEME.grid } },
       crosshair: { mode: CrosshairMode.Normal },
       rightPriceScale: { borderColor: THEME.border, scaleMargins: { top: 0.12, bottom: 0.12 } },
-      timeScale: { borderColor: THEME.border, timeVisible: tf !== '1D', secondsVisible: false, rightOffset: 6 },
+      timeScale: { borderColor: THEME.border, timeVisible: tf !== '1D', secondsVisible: false, rightOffset: 6, barSpacing: BAR_SPACING },
       localization: { locale: LANG },
     });
     this.series = this.chart.addSeries(CandlestickSeries, {
@@ -123,7 +125,10 @@ export class Panel {
   fitDefault() {
     const len = this.bars.length;
     if (!len) return;
-    this.chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, len - 120), to: len + 6 });
+    // Fixed candle width (not a fixed candle count), so candles look the same in 4/2/1 layouts
+    const ts = this.chart.timeScale();
+    ts.applyOptions({ barSpacing: BAR_SPACING });
+    ts.scrollToRealTime();
     this.needsFit = false;
   }
 
