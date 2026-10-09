@@ -21,6 +21,8 @@ export default {
   'layout.label': 'Layout {n}',
   'top.swingsHelp': 'What are swings?',
   'top.bosHelp': 'What are BOS and CHoCH?',
+  'ha.title': 'Heikin Ashi candles (display only: structure is computed on the real candles)',
+  'ha.help': 'What are Heikin Ashi candles?',
   'brk.title': 'When a structure counts as broken',
   'brk.label': 'Break',
   'brk.close': 'by close',
@@ -92,7 +94,7 @@ export default {
   'panel.last': 'last {kind}',
   'panel.noVolume': 'no volume for this instrument',
   'panel.vwap1D': 'VWAP does not apply on 1D',
-  'panel.ema200': 'EMA200 needs 200 candles ({n} available)',
+  'panel.emaShort': 'EMA{p} needs {p} candles ({n} available)',
 
   'err.server': 'Could not reach the local server',
   'err.notConnected': 'Not connected to the data provider (IB Gateway/TWS or Alpaca)',

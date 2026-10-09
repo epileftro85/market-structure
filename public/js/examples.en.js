@@ -313,6 +313,7 @@ export const EXAMPLES = {
     outcomes: [
       { title: 'A · Pullback to the EMA', when: 'Price drops to the 4H EMA 50 and bounces.', means: 'It is an area of interest that many people watch.', check: 'Note how many times the bounce happens and how many times it does not.' },
       { title: 'B · Loses the EMA 200', when: 'It closes below the EMA 200.', means: 'Change in the longer-term context.', check: 'Compare with what the structure has done.' },
+      { title: 'C · Loses the EMA 10 and 20 on 15m', when: 'On 15m price closes below the short EMAs (the thick lines).', means: 'Short-term momentum slows down, even if the 4H context is still bullish.', check: 'See whether that leg ends in an HL or in a CHoCH.' },
     ],
     measure: [
       'Distance from price to the EMA, in ATR.',
@@ -367,6 +368,30 @@ export const EXAMPLES = {
     mistakes: [
       'Expecting volume on forex: IB delivers MIDPOINT (no volume).',
       'Interpreting high volume as direction: it can be buying or selling.',
+    ],
+  },
+
+  // ------------------------------------------------------------------ Heikin Ashi
+  ha: {
+    title: 'Heikin Ashi to read a leg on 15m',
+    scenario:
+      'On 15m there was a bullish BOS and price keeps rising with normal candles that alternate colors. You turn on Heikin Ashi to see the leg with less noise.',
+    steps: [
+      'First mark the structure with normal candles (swings, BOS, CHoCH).',
+      'Turn on Heikin Ashi in the top bar and compare the same leg.',
+      'Switch back to normal candles before measuring any level.',
+    ],
+    outcomes: [
+      { title: 'A · Clean green run', when: 'Several green HA candles in a row with no lower wick.', means: 'The bullish leg had no significant pullbacks.', check: 'Compare with the HLs marked on normal candles.' },
+      { title: 'B · Small candles with two wicks', when: 'Small HA candles with wicks above and below appear.', means: 'Pause or indecision; sometimes it comes before a CHoCH.', check: 'See whether the real structure marks a CHoCH shortly after.' },
+    ],
+    measure: [
+      'How many same-colored HA candles there are between one BOS and the next.',
+      'On which HA candle the color changes compared with when the real CHoCH appears.',
+    ],
+    mistakes: [
+      'Measuring breaks or distances on HA candles: their prices are averages, not traded prices.',
+      'Expecting labels to land exactly on HA wicks: they are computed on the real candles.',
     ],
   },
 };

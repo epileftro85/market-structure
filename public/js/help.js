@@ -12,7 +12,7 @@
 //   practice what to practice in order to learn
 //   caveat   limits / warnings
 //   toggles  switches that can be toggled from the guide: [{ k, label }]
-//            k = indicator key, or '@sw' / '@st' (top bar checkboxes)
+//            k = indicator key, or '@sw' / '@st' / '@ha' (top bar checkboxes)
 //   diagram  drawing key (optional). DIAGRAMS[k](lang) returns the SVG with labels in that language
 //
 // The English version of the content is in help.en.js (same keys, same toggles and diagrams).
@@ -318,15 +318,15 @@ export const HELP = [
     caveat: 'Las líneas que caen fuera del rango de precios visible no se dibujan; aleja el zoom para verlas.',
   },
   {
-    key: 'ema', group: 'context', title: 'EMA 50 / EMA 200', color: '#93c5fd',
-    toggles: [{ k: 'ema50', label: 'EMA 50' }, { k: 'ema200', label: 'EMA 200' }],
+    key: 'ema', group: 'context', title: 'EMA 10 / 20 / 50 / 100 / 200', color: '#93c5fd',
+    toggles: [10, 20, 50, 100, 200].map((p) => ({ k: `ema${p}`, label: `EMA ${p}` })),
     what: 'Promedios móviles exponenciales: promedian los cierres dándole más peso a los recientes. Dan contexto de tendencia y de "velocidad" del precio.',
     read: [
-      'EMA 50 (azul claro) reacciona más rápido; EMA 200 (blanca) representa una tendencia más lenta.',
+      'Cuanto más corta la EMA, más gruesa la línea y más rápido reacciona: EMA 10 (rosa, la más gruesa), 20 (turquesa), 50 (azul claro), 100 (violeta) y 200 (blanca, la más fina).',
       'Precio por encima de una EMA inclinada hacia arriba suele leerse como contexto alcista; por debajo y hacia abajo, bajista.',
     ],
     rules: [
-      'EMA de los cierres, sembrada con la media simple de las primeras n velas. La EMA 200 necesita 200 velas; si no hay suficientes, el panel lo avisa.',
+      'EMA de los cierres reales (también con Heikin Ashi activo), sembrada con la media simple de las primeras n velas. Cada EMA necesita al menos tantas velas como su periodo; si no hay suficientes, el panel lo avisa.',
     ],
     practice: 'Compara cómo se comporta la estructura (BOS/CHoCH) cuando el precio está por encima o por debajo de la EMA 200.',
     caveat: 'Son indicadores rezagados: describen el pasado reciente.',
@@ -360,7 +360,24 @@ export const HELP = [
     practice: 'Compara el volumen de un BOS con el de las velas anteriores: ¿se confirma o pasa desapercibido?',
     caveat: 'Más volumen no garantiza continuación; es contexto, no una señal.',
   },
+  {
+    key: 'ha', group: 'context', title: 'Velas Heikin Ashi', color: '#26a69a',
+    toggles: [{ k: '@ha', label: 'Usar velas Heikin Ashi' }],
+    what: 'Otra forma de dibujar las velas: cada una promedia la vela real con la Heikin Ashi anterior. Suaviza el ruido y hace más visibles las rachas de velas del mismo color.',
+    read: [
+      'Rachas de velas verdes sin mecha inferior suelen leerse como impulso alcista; rojas sin mecha superior, bajista.',
+      'Velas pequeñas con mechas a ambos lados indican indecisión o pausa.',
+      'Las marcas (swings, BOS, CHoCH, zonas) se calculan con las velas reales, así que una etiqueta puede no coincidir exactamente con la mecha Heikin Ashi dibujada.',
+    ],
+    rules: [
+      'Cierre HA = (apertura + máximo + mínimo + cierre) / 4. Apertura HA = (apertura HA anterior + cierre HA anterior) / 2; la primera es (apertura + cierre) / 2.',
+      'Máximo HA = el mayor entre el máximo real, la apertura HA y el cierre HA; mínimo HA, el menor.',
+      'Es solo visual: estructura, indicadores, EMAs y la etiqueta del último precio usan las velas reales. Por defecto se usan velas normales.',
+    ],
+    practice: 'Marca la estructura con velas normales, cambia a Heikin Ashi y mira si las rachas de color coinciden con los tramos entre BOS.',
+    caveat: 'Los precios Heikin Ashi no son precios negociados: no midas niveles, rupturas ni distancias sobre ellos.',
+  },
 ];
 
-/** The menu switches (ema50, ema200) share a single help entry. */
-export const helpKeyFor = (indKey) => (indKey === 'ema50' || indKey === 'ema200' ? 'ema' : indKey);
+/** The menu switches (ema10 … ema200) share a single help entry. */
+export const helpKeyFor = (indKey) => (/^ema\d+$/.test(indKey) ? 'ema' : indKey);

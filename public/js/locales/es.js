@@ -22,6 +22,8 @@ export default {
   'layout.label': 'Layout {n}',
   'top.swingsHelp': '¿Qué son los swings?',
   'top.bosHelp': '¿Qué son BOS y CHoCH?',
+  'ha.title': 'Velas Heikin Ashi (solo visual: la estructura se calcula con las velas reales)',
+  'ha.help': '¿Qué son las velas Heikin Ashi?',
   'brk.title': 'Cómo se considera rota una estructura',
   'brk.label': 'Ruptura',
   'brk.close': 'por cierre',
@@ -93,7 +95,7 @@ export default {
   'panel.last': 'último {kind}',
   'panel.noVolume': 'sin volumen en este instrumento',
   'panel.vwap1D': 'VWAP no aplica en 1D',
-  'panel.ema200': 'EMA200 necesita 200 velas (hay {n})',
+  'panel.emaShort': 'EMA{p} necesita {p} velas (hay {n})',
 
   'err.server': 'No se pudo contactar al servidor local',
   'err.notConnected': 'No hay conexión con el proveedor de datos (IB Gateway/TWS o Alpaca)',

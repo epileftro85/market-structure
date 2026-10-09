@@ -1,7 +1,7 @@
 import { createChart, CandlestickSeries, LineSeries, HistogramSeries, CrosshairMode } from '/vendor/lightweight-charts.standalone.production.mjs';
 import { fetchBars } from './api.js';
 import { detectStructure } from './structure.js';
-import { detectFVG, detectOrderBlocks, detectEqualLevels, detectSweeps, ema, vwapDaily } from './indicators.js';
+import { detectFVG, detectOrderBlocks, detectEqualLevels, detectSweeps, ema, vwapDaily, heikinAshi } from './indicators.js';
 import { StructurePrimitive } from './structurePrimitive.js';
 import { LANG, t } from './i18n.js';
 
@@ -12,7 +12,15 @@ const MAX = { fvg: 10, ob: 6, eq: 8, sweep: 12 };
 // Initial space per candle in px: each panel shows as many candles as fit its width
 const BAR_SPACING = 10;
 const HTF_COLORS = { '1D': '#c084fc', '4H': '#22d3ee', '15m': '#a3e635' };
-const LINE_COLORS = { ema50: '#93c5fd', ema200: '#e2e8f0', vwap: '#fbbf24' };
+const LINE_COLORS = { vwap: '#fbbf24' };
+/** Optional EMAs: the shorter the period, the thicker the line. Keys match the indicators menu. */
+export const EMAS = [
+  { key: 'ema10', period: 10, color: '#f9a8d4', width: 4 },
+  { key: 'ema20', period: 20, color: '#5eead4', width: 3 },
+  { key: 'ema50', period: 50, color: '#93c5fd', width: 2 },
+  { key: 'ema100', period: 100, color: '#a78bfa', width: 1.5 },
+  { key: 'ema200', period: 200, color: '#e2e8f0', width: 1 },
+];
 
 const THEME = {
   bg: '#0f131a', text: '#9aa4b2', grid: '#1b222d', border: '#232c3a',
@@ -44,6 +52,7 @@ export class Panel {
     this.sweeps = [];
     this.htfLines = [];
     this.ind = new Set();
+    this.candles = 'normal'; // 'normal' | 'ha' (Heikin Ashi, display only)
     this.needsFit = false;
 
     const el = (this.el = document.createElement('section'));
@@ -97,11 +106,10 @@ export class Panel {
       borderVisible: false,
     });
     // Optional series (hidden until enabled in the indicators menu)
-    const line = (color) => this.chart.addSeries(LineSeries, {
-      color, lineWidth: 1.5, visible: false, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
+    const line = (color, lineWidth = 1.5) => this.chart.addSeries(LineSeries, {
+      color, lineWidth, visible: false, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
     });
-    this.ema50 = line(LINE_COLORS.ema50);
-    this.ema200 = line(LINE_COLORS.ema200);
+    this.emas = EMAS.map((e) => ({ ...e, series: line(e.color, e.width) }));
     this.vwap = line(LINE_COLORS.vwap);
     this.vol = this.chart.addSeries(HistogramSeries, {
       visible: false, priceScaleId: 'vol', priceFormat: { type: 'volume' }, lastValueVisible: false, priceLineVisible: false,
@@ -132,7 +140,34 @@ export class Panel {
     this.needsFit = false;
   }
 
-  /** Turns indicators on/off (Set of keys: fvg, ob, eq, sweep, ext, htf, ema50, ema200, vwap, vol). */
+  /**
+   * Candle style: 'normal' or 'ha' (Heikin Ashi). Display only: structure, indicators and the
+   * last-price label keep using the real candles.
+   */
+  setCandles(style) {
+    const next = style === 'ha' ? 'ha' : 'normal';
+    if (next === this.candles) return;
+    this.candles = next;
+    if (this.bars.length) this.series.setData(this.displayBars());
+    this.updateLastPrice();
+  }
+
+  displayBars() {
+    return this.candles === 'ha' ? heikinAshi(this.bars) : this.bars;
+  }
+
+  /** With Heikin Ashi the series' own last value is an average: show the real last close instead. */
+  updateLastPrice() {
+    const ha = this.candles === 'ha';
+    this.series.applyOptions({ lastValueVisible: !ha, priceLineVisible: !ha });
+    if (this.realLine) { this.series.removePriceLine(this.realLine); this.realLine = null; }
+    const last = this.bars[this.bars.length - 1];
+    if (!ha || !last) return;
+    const color = last.close >= last.open ? THEME.up : THEME.down;
+    this.realLine = this.series.createPriceLine({ price: last.close, color, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: '' });
+  }
+
+  /** Turns indicators on/off (Set of keys: fvg, ob, eq, sweep, ext, htf, ema10…ema200, vwap, vol). */
   setInd(set) {
     this.ind = new Set(set);
     this.recompute();
@@ -199,11 +234,12 @@ export class Panel {
   clearData() {
     this.bars = [];
     this.series.setData([]);
-    for (const x of [this.ema50, this.ema200, this.vwap, this.vol]) x.setData([]);
+    for (const x of [...this.emas.map((e) => e.series), this.vwap, this.vol]) x.setData([]);
     this.result = this.ext = null;
     this.zones = []; this.eq = []; this.sweeps = [];
     this.noteEl.textContent = '';
     this.prim.update(null);
+    this.updateLastPrice();
     this.trendEl.textContent = '';
     this.loadedKey = null;
   }
@@ -249,11 +285,13 @@ export class Panel {
     this.bars = bars;
     if (canPatch) {
       // Incremental refresh: does not move the user's zoom or position
-      for (const b of bars) if (b.time >= lastOld) this.series.update(b);
+      const shown = this.displayBars();
+      for (const b of shown) if (b.time >= lastOld) this.series.update(b);
     } else {
-      this.series.setData(bars);
+      this.series.setData(this.displayBars());
       if (this.visible) this.fitDefault(); else this.needsFit = true;
     }
+    this.updateLastPrice();
     this.recompute();
   }
 
@@ -290,10 +328,10 @@ export class Panel {
     const { bars, ind } = this;
     const on = (k) => ind.has(k);
     const pts = (arr) => arr.map((p) => ({ time: p.time, value: p.value }));
-    this.ema50.applyOptions({ visible: on('ema50') });
-    this.ema50.setData(on('ema50') ? pts(ema(bars, 50)) : []);
-    this.ema200.applyOptions({ visible: on('ema200') });
-    this.ema200.setData(on('ema200') ? pts(ema(bars, 200)) : []);
+    for (const e of this.emas) {
+      e.series.applyOptions({ visible: on(e.key) });
+      e.series.setData(on(e.key) ? pts(ema(bars, e.period)) : []);
+    }
     this.vwap.applyOptions({ visible: on('vwap') });
     this.vwap.setData(on('vwap') && this.tf !== '1D' ? pts(vwapDaily(bars)) : []);
     this.vol.applyOptions({ visible: on('vol') });
@@ -306,7 +344,9 @@ export class Panel {
     const notes = [];
     if ((on('vol') || on('vwap')) && !hasVolume) notes.push(t('panel.noVolume'));
     else if (on('vwap') && this.tf === '1D') notes.push(t('panel.vwap1D'));
-    if (on('ema200') && bars.length < 200) notes.push(t('panel.ema200', { n: bars.length }));
+    // Report only the longest enabled EMA that lacks candles
+    const short = this.emas.filter((e) => on(e.key) && bars.length < e.period).pop();
+    if (short) notes.push(t('panel.emaShort', { p: short.period, n: bars.length }));
     this.noteEl.textContent = notes.join(' · ');
   }
 

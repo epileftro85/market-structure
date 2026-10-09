@@ -142,15 +142,15 @@ export const HELP = [
     caveat: 'Lines that fall outside the visible price range are not drawn; zoom out to see them.',
   },
   {
-    key: 'ema', group: 'context', title: 'EMA 50 / EMA 200', color: '#93c5fd',
-    toggles: [{ k: 'ema50', label: 'EMA 50' }, { k: 'ema200', label: 'EMA 200' }],
+    key: 'ema', group: 'context', title: 'EMA 10 / 20 / 50 / 100 / 200', color: '#93c5fd',
+    toggles: [10, 20, 50, 100, 200].map((p) => ({ k: `ema${p}`, label: `EMA ${p}` })),
     what: 'Exponential moving averages: they average the closes giving more weight to the recent ones. They give context about the trend and the "speed" of price.',
     read: [
-      'EMA 50 (light blue) reacts faster; EMA 200 (white) represents a slower trend.',
+      'The shorter the EMA, the thicker the line and the faster it reacts: EMA 10 (pink, thickest), 20 (teal), 50 (light blue), 100 (violet) and 200 (white, thinnest).',
       'Price above an upward-sloping EMA is usually read as bullish context; below and sloping down, bearish.',
     ],
     rules: [
-      'EMA of the closes, seeded with the simple average of the first n candles. EMA 200 needs 200 candles; if there are not enough, the panel says so.',
+      'EMA of the real closes (also when Heikin Ashi is on), seeded with the simple average of the first n candles. Each EMA needs at least as many candles as its period; if there are not enough, the panel says so.',
     ],
     practice: 'Compare how structure (BOS/CHoCH) behaves when price is above or below the EMA 200.',
     caveat: 'They are lagging indicators: they describe the recent past.',
@@ -183,5 +183,22 @@ export const HELP = [
     ],
     practice: 'Compare the volume of a BOS with that of the previous candles: does it stand out or go unnoticed?',
     caveat: 'More volume does not guarantee continuation; it is context, not a signal.',
+  },
+  {
+    key: 'ha', group: 'context', title: 'Heikin Ashi candles', color: '#26a69a',
+    toggles: [{ k: '@ha', label: 'Use Heikin Ashi candles' }],
+    what: 'Another way to draw the candles: each one averages the real candle with the previous Heikin Ashi one. It smooths out noise and makes runs of same-colored candles easier to see.',
+    read: [
+      'Runs of green candles with no lower wick are usually read as bullish momentum; red ones with no upper wick, bearish.',
+      'Small candles with wicks on both sides point to indecision or a pause.',
+      'Marks (swings, BOS, CHoCH, zones) are computed on the real candles, so a label may not sit exactly on the Heikin Ashi wick that is drawn.',
+    ],
+    rules: [
+      'HA close = (open + high + low + close) / 4. HA open = (previous HA open + previous HA close) / 2; the first one is (open + close) / 2.',
+      'HA high = the largest of the real high, HA open and HA close; HA low, the smallest.',
+      'Display only: structure, indicators, EMAs and the last-price label use the real candles. Normal candles are the default.',
+    ],
+    practice: 'Mark the structure with normal candles, switch to Heikin Ashi and check whether the color runs match the legs between BOS.',
+    caveat: 'Heikin Ashi prices are not traded prices: do not measure levels, breaks or distances on them.',
   },
 ];

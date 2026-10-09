@@ -313,6 +313,7 @@ export const EXAMPLES = {
     outcomes: [
       { title: 'A · Retroceso hasta la EMA', when: 'El precio baja hasta la EMA 50 de 4H y rebota.', means: 'Es una zona de interés que muchos observan.', check: 'Anota cuántas veces el rebote se produce y cuántas no.' },
       { title: 'B · Pierde la EMA 200', when: 'Cierra por debajo de la EMA 200.', means: 'Cambio de contexto de más largo plazo.', check: 'Compara con lo que haya hecho la estructura.' },
+      { title: 'C · Pierde la EMA 10 y la 20 en 15m', when: 'En 15m el precio cierra debajo de las EMAs cortas (las líneas gruesas).', means: 'El impulso de corto plazo se frena, aunque el contexto de 4H siga alcista.', check: 'Mira si ese tramo termina en un HL o en un CHoCH.' },
     ],
     measure: [
       'Distancia del precio a la EMA, en ATR.',
@@ -367,6 +368,30 @@ export const EXAMPLES = {
     mistakes: [
       'Esperar volumen en forex: IB entrega MIDPOINT (sin volumen).',
       'Interpretar un volumen alto como dirección: puede ser compra o venta.',
+    ],
+  },
+
+  // ------------------------------------------------------------------ Heikin Ashi
+  ha: {
+    title: 'Heikin Ashi para leer un tramo en 15m',
+    scenario:
+      'En 15m hubo un BOS alcista y el precio sigue subiendo con velas normales que alternan colores. Activas Heikin Ashi para ver el tramo con menos ruido.',
+    steps: [
+      'Marca primero la estructura con velas normales (swings, BOS, CHoCH).',
+      'Activa Heikin Ashi en la barra superior y compara el mismo tramo.',
+      'Vuelve a velas normales antes de medir cualquier nivel.',
+    ],
+    outcomes: [
+      { title: 'A · Racha verde limpia', when: 'Varias velas HA verdes seguidas sin mecha inferior.', means: 'El tramo alcista no tuvo retrocesos importantes.', check: 'Compara con los HL marcados en velas normales.' },
+      { title: 'B · Velas pequeñas con dos mechas', when: 'Aparecen velas HA pequeñas con mechas arriba y abajo.', means: 'Pausa o indecisión; a veces precede a un CHoCH.', check: 'Mira si la estructura real marca un CHoCH poco después.' },
+    ],
+    measure: [
+      'Cuántas velas HA del mismo color hay entre un BOS y el siguiente.',
+      'En qué vela HA cambia el color respecto a cuándo aparece el CHoCH real.',
+    ],
+    mistakes: [
+      'Medir rupturas o distancias sobre las velas HA: sus precios son promedios, no precios negociados.',
+      'Esperar que las etiquetas caigan justo en las mechas HA: se calculan con las velas reales.',
     ],
   },
 };
