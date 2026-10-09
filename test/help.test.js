@@ -10,7 +10,7 @@ import en from '../public/js/locales/en.js';
 const CONTENT = { es: { HELP: HELP_ES, EXAMPLES: EXAMPLES_ES }, en: { HELP: HELP_EN, EXAMPLES: EXAMPLES_EN } };
 
 // Menu indicator keys (must match IND_KEYS in app.js)
-const IND_KEYS = ['fvg', 'ob', 'eq', 'sweep', 'ext', 'htf', 'ema50', 'ema200', 'vwap', 'vol'];
+const IND_KEYS = ['fvg', 'ob', 'eq', 'sweep', 'ext', 'htf', 'ema10', 'ema20', 'ema50', 'ema100', 'ema200', 'vwap', 'vol'];
 
 test('diagrams are valid SVG without scripts', () => {
   for (const [k, draw] of Object.entries(DIAGRAMS)) {
@@ -46,7 +46,7 @@ for (const [lang, { HELP, EXAMPLES }] of Object.entries(CONTENT)) {
 
   test(`[${lang}] guide toggles point to valid keys`, () => {
     for (const h of HELP) {
-      for (const t of h.toggles ?? []) assert.ok([...IND_KEYS, '@sw', '@st'].includes(t.k), `${h.key}: toggle ${t.k}`);
+      for (const t of h.toggles ?? []) assert.ok([...IND_KEYS, '@sw', '@st', '@ha'].includes(t.k), `${h.key}: toggle ${t.k}`);
     }
   });
 

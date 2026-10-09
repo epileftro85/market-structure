@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { detectStructure } from '../public/js/structure.js';
-import { atr, ema, vwapDaily, detectFVG, detectOrderBlocks, detectEqualLevels, detectSweeps } from '../public/js/indicators.js';
+import { atr, ema, vwapDaily, detectFVG, detectOrderBlocks, detectEqualLevels, detectSweeps, heikinAshi } from '../public/js/indicators.js';
 
 const mk = (rows) => rows.map(([open, high, low, close], i) => ({ time: i * 60, open, high, low, close, volume: 100 }));
 
@@ -27,6 +27,29 @@ test('EMA: seeded with the SMA and follows a constant series', () => {
   assert.equal(e.length, 7);
   assert.ok(e.every((p) => Math.abs(p.value - 5) < 1e-9));
   assert.deepEqual(ema(bars.slice(0, 3), 4), []);
+});
+
+test('Heikin Ashi: averaged candles, same times, input untouched', () => {
+  const bars = mk([[10, 14, 9, 12], [12, 15, 11, 13], [13, 13.5, 8, 9]]);
+  const copy = structuredClone(bars);
+  const ha = heikinAshi(bars);
+  assert.deepEqual(bars, copy);
+  assert.deepEqual(ha.map((b) => b.time), bars.map((b) => b.time));
+  // 1st: open = (10+12)/2 = 11, close = (10+14+9+12)/4 = 11.25
+  assert.equal(ha[0].open, 11);
+  assert.equal(ha[0].close, 11.25);
+  assert.equal(ha[0].high, 14);
+  assert.equal(ha[0].low, 9);
+  // 2nd: open = (11+11.25)/2 = 11.125, close = (12+15+11+13)/4 = 12.75
+  assert.equal(ha[1].open, 11.125);
+  assert.equal(ha[1].close, 12.75);
+  // 3rd: open = (11.125+12.75)/2 = 11.9375, close = (13+13.5+8+9)/4 = 10.875; high includes the HA open
+  assert.equal(ha[2].open, 11.9375);
+  assert.equal(ha[2].close, 10.875);
+  assert.equal(ha[2].high, 13.5);
+  assert.equal(ha[2].low, 8);
+  assert.equal(ha[2].volume, 100);
+  assert.deepEqual(heikinAshi([]), []);
 });
 
 test('VWAP resets each day and does not invent values without volume', () => {

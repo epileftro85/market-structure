@@ -1,4 +1,4 @@
-import { Panel, EXT_FACTOR } from './panel.js';
+import { Panel, EXT_FACTOR, EMAS } from './panel.js';
 import { searchSymbols, getStatus, displayName } from './api.js';
 import { readFavs, isFav, toggleFav, removeFav } from './favorites.js';
 import { LANG, t, setLang, translateDom } from './i18n.js';
@@ -23,7 +23,7 @@ $('langSel').addEventListener('change', (e) => setLang(e.target.value));
 // State of THIS tab. It lives in the URL: duplicating the tab copies the whole
 // view, and each tab can then switch symbol on its own.
 // ---------------------------------------------------------------------------
-const IND_KEYS = ['fvg', 'ob', 'eq', 'sweep', 'ext', 'htf', 'ema50', 'ema200', 'vwap', 'vol'];
+const IND_KEYS = ['fvg', 'ob', 'eq', 'sweep', 'ext', 'htf', 'ema10', 'ema20', 'ema50', 'ema100', 'ema200', 'vwap', 'vol'];
 const IND_COOKIE = 'ms_ind';
 
 function readIndCookie() {
@@ -56,6 +56,7 @@ function readUrl() {
     brk: q.get('brk') === 'wick' ? 'wick' : 'close',
     sw: q.get('sw') !== '0',
     st: q.get('st') !== '0',
+    ha: q.get('ha') === '1', // Heikin Ashi candles (normal by default)
     // Indicators: the URL wins (so "duplicate tab" copies the view); otherwise, last used (cookie)
     ind: parseInd(q.has('ind') ? (q.get('ind') || '').split(',') : readIndCookie()),
   };
@@ -74,6 +75,7 @@ function urlFor(s, contractOverride) {
   q.set('brk', s.brk);
   if (!s.sw) q.set('sw', '0');
   if (!s.st) q.set('st', '0');
+  if (s.ha) q.set('ha', '1');
   q.set('ind', [...s.ind].join(','));
   return `${location.pathname}?${q}`;
 }
@@ -110,6 +112,7 @@ const panels = TFS.map(
     });
     p.setN(state.n[i]);
     p.setInd(state.ind);
+    p.setCandles(state.ha ? 'ha' : 'normal');
     return p;
   },
 );
@@ -238,11 +241,13 @@ function renderCurrent() {
 $('swChk').checked = state.sw;
 $('stChk').checked = state.st;
 $('brkSel').value = state.brk;
+$('haChk').checked = state.ha;
 panels.forEach((p) => p.setOptions({ breakBy: state.brk, swings: state.sw, structure: state.st }));
 
 $('swChk').addEventListener('change', (e) => { state.sw = e.target.checked; panels.forEach((p) => p.setOptions({ swings: state.sw })); persist(); syncControls(); });
 $('stChk').addEventListener('change', (e) => { state.st = e.target.checked; panels.forEach((p) => p.setOptions({ structure: state.st })); persist(); syncControls(); });
 $('brkSel').addEventListener('change', (e) => { state.brk = e.target.value; panels.forEach((p) => p.setOptions({ breakBy: state.brk })); persist(); });
+$('haChk').addEventListener('change', (e) => { state.ha = e.target.checked; panels.forEach((p) => p.setCandles(state.ha ? 'ha' : 'normal')); persist(); syncControls(); });
 $('refreshBtn').addEventListener('click', () => loadVisible({ force: true }));
 $('dupBtn').addEventListener('click', () => window.open(location.href, '_blank', 'noopener'));
 
@@ -271,8 +276,7 @@ const IND_GROUPS = [
     ['htf', t('ind.htf.label'), t('ind.htf.tip'), '#c084fc'],
   ] },
   { title: t('ind.g.context'), items: [
-    ['ema50', 'EMA 50', null, '#93c5fd'],
-    ['ema200', 'EMA 200', null, '#e2e8f0'],
+    ...EMAS.map((e) => [e.key, `EMA ${e.period}`, null, e.color]),
     ['vwap', t('ind.vwap.label'), t('ind.vwap.tip'), '#fbbf24'],
     ['vol', t('ind.vol.label'), t('ind.vol.tip'), '#26a69a'],
   ] },
@@ -354,12 +358,12 @@ renderIndBtn();
 // Contextual guide ("?" buttons): side panel with what it is, how to read it and how the app computes it
 // ---------------------------------------------------------------------------
 function getToggle(k) {
-  return k === '@sw' ? state.sw : k === '@st' ? state.st : state.ind.has(k);
+  return k === '@sw' ? state.sw : k === '@st' ? state.st : k === '@ha' ? state.ha : state.ind.has(k);
 }
 
 function setToggle(k, on) {
-  if (k === '@sw' || k === '@st') {
-    const box = $(k === '@sw' ? 'swChk' : 'stChk');
+  if (k === '@sw' || k === '@st' || k === '@ha') {
+    const box = $({ '@sw': 'swChk', '@st': 'stChk', '@ha': 'haChk' }[k]);
     box.checked = on;
     box.dispatchEvent(new Event('change')); // reuses the top bar handler
   } else {
@@ -373,6 +377,7 @@ function syncControls() {
   document.querySelectorAll('input[data-toggle]').forEach((i) => { i.checked = getToggle(i.dataset.toggle); });
   $('swChk').checked = state.sw;
   $('stChk').checked = state.st;
+  $('haChk').checked = state.ha;
 }
 
 function el(tag, cls, text) {

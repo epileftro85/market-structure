@@ -3,7 +3,7 @@
 Context for any AI (or person) working in this repository. Read it in full before changing anything.
 Language when talking to the user: **Spanish**. Code, comments and docs in the repo: English.
 
-Last updated: 2026-10-06.
+Last updated: 2026-10-09.
 
 ---
 
@@ -15,7 +15,8 @@ It pulls candles from Interactive Brokers (IB) or Alpaca (chosen in `.env`) and 
 - Swings and **HH / HL / LH / LL** labels
 - **BOS** (Break of Structure) and **CHoCH** (Change of Character)
 - Optional indicators (all *toggleable*): FVG, Order Blocks, EQH/EQL, Sweeps, external structure (n×3),
-  higher-timeframe levels, EMA 50/200, daily VWAP and volume
+  higher-timeframe levels, EMA 10/20/50/100/200, daily VWAP and volume
+- Optional **Heikin Ashi** candles (display only; normal candles by default)
 - A **contextual guide** (`?` buttons) with diagrams, the exact rule the app uses, and step-by-step examples
 
 It runs in the browser (local Node server + static pages). Each tab is independent: it can show a different symbol.
@@ -107,7 +108,7 @@ public/
   js/app.js                 URL state, 4/2/1 layout, search, favorites, indicators menu, guide
   js/panel.js               one panel = one timeframe (chart, series, structure, indicators)
   js/structure.js           swings, HH/HL/LH/LL, BOS, CHoCH   ← PURE, with tests
-  js/indicators.js          ATR, EMA, VWAP, FVG, OB, EQH/EQL, Sweeps ← PURE, with tests
+  js/indicators.js          ATR, EMA, VWAP, FVG, OB, EQH/EQL, Sweeps, Heikin Ashi ← PURE, with tests
   js/structurePrimitive.js  drawing on the chart canvas (zones below, marks on top)
   js/help.js · js/examples.js   guide and examples content in Spanish (data only) + SVG diagrams
   js/help.en.js · js/examples.en.js   the same guide and examples in English (same keys)
@@ -163,6 +164,9 @@ If you change a rule, update all of these together: the code, `help.js`, `exampl
 - **Sweep**: the wick goes beyond a swing and the candle closes back inside (if it closes beyond, it is a break). Each swing yields at most one sweep.
   The candle that **forms** an EQH (second near-equal high) does **not** count as a sweep, and a candle that sweeps several levels is marked only once. Max. 12.
 - **External**: same algorithm with `n × 3`. **Higher-TF levels**: each panel receives only the higher timeframes (1D receives nothing).
+- **EMAs** (`EMAS` in `panel.js`): periods 10/20/50/100/200, each its own toggle; shorter period = thicker line. Computed on real closes.
+- **Heikin Ashi** (`heikinAshi`, `ha=1` in the URL): changes only what the candle series draws. Structure, indicators, EMAs and the
+  last-price label (a real-close price line replaces the series' own label) keep using the real candles.
 - Daily **VWAP** (not applied on 1D or without volume). **Volume**: forex has none (IB delivers MIDPOINT; IB's `-1` values are normalized to 0).
 
 **Times**: lightweight-charts draws in UTC; candles are shifted by the `America/New_York` offset (`DISPLAY_TZ` in `api.js`). The daily candle is aligned to midnight of its day.

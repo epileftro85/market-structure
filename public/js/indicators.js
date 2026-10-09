@@ -186,3 +186,21 @@ export function detectSweeps(bars, pivots, opts = {}) {
   }
   return [...found.values()].sort((x, y) => x.index - y.index);
 }
+
+/**
+ * Heikin Ashi candles (display only: structure and indicators keep using the real candles).
+ *  close = (open + high + low + close) / 4
+ *  open  = (previous HA open + previous HA close) / 2; the first one is (open + close) / 2
+ *  high  = max(high, HA open, HA close); low = min(low, HA open, HA close)
+ * Returns new bars with the same `time` (other fields such as volume are kept).
+ */
+export function heikinAshi(bars) {
+  const out = [];
+  for (let i = 0; i < bars.length; i++) {
+    const b = bars[i];
+    const close = (b.open + b.high + b.low + b.close) / 4;
+    const open = i === 0 ? (b.open + b.close) / 2 : (out[i - 1].open + out[i - 1].close) / 2;
+    out.push({ ...b, open, close, high: Math.max(b.high, open, close), low: Math.min(b.low, open, close) });
+  }
+  return out;
+}

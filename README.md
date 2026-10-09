@@ -147,6 +147,7 @@ When reporting an IB error, include the exact code and text that IB returned.
 | Another symbol side by side | **Duplicate tab ↗** and change the symbol in one of them |
 | Sensitivity | `n` of each panel (− / +) |
 | Break by close or by wick | **Break** selector |
+| Heikin Ashi candles | **Heikin Ashi** checkbox (off = normal candles, the default; saved in the URL as `ha=1`). Display only: structure, indicators, EMAs and the last-price label use the real candles |
 | Language | **ES / EN** selector |
 
 ## Language
@@ -213,7 +214,7 @@ The numbers are illustrative, not statistics or recommendations.
 | **Sweeps** | Liquidity sweep | The wick takes out a swing and the candle **closes back** inside. If it closes beyond, it is a break (BOS/CHoCH), not a sweep. Max. 12 |
 | **External (n×3)** | Second structure scale | Same algorithm with `n` tripled; drawn with pill labels and thick lines over the internal one |
 | **Higher TF levels** | Top-down alignment aid | On each panel, the active swing high/low and last break of the higher timeframes (1D purple, 4H cyan, 15m lime). Loads hidden panels in the background if needed. Only visible if inside the visible price range |
-| **EMA 50 / 200** | Exponential moving averages | Seeded with an SMA. EMA 200 needs 200 candles |
+| **EMA 10 / 20 / 50 / 100 / 200** | Exponential moving averages, each toggled on its own | Seeded with an SMA, always on the real closes. The shorter the period, the thicker the line (10 = 2 px … 200 = 1 px). Each EMA needs as many candles as its period |
 | **VWAP (daily)** | Volume-weighted average price | Resets every day (exchange time). Not applicable on 1D |
 | **Volume** | Bottom histogram | Forex has no volume (IB returns MIDPOINT): the panel says so |
 
