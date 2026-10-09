@@ -214,7 +214,7 @@ The numbers are illustrative, not statistics or recommendations.
 | **Sweeps** | Liquidity sweep | The wick takes out a swing and the candle **closes back** inside. If it closes beyond, it is a break (BOS/CHoCH), not a sweep. Max. 12 |
 | **External (n×3)** | Second structure scale | Same algorithm with `n` tripled; drawn with pill labels and thick lines over the internal one |
 | **Higher TF levels** | Top-down alignment aid | On each panel, the active swing high/low and last break of the higher timeframes (1D purple, 4H cyan, 15m lime). Loads hidden panels in the background if needed. Only visible if inside the visible price range |
-| **EMA 10 / 20 / 50 / 100 / 200** | Exponential moving averages, each toggled on its own | Seeded with an SMA, always on the real closes. The shorter the period, the thicker the line (10 = 4 px … 200 = 1 px). Each EMA needs as many candles as its period |
+| **EMA 10 / 20 / 50 / 100 / 200** | Exponential moving averages, each toggled on its own | Seeded with an SMA, always on the real closes. The shorter the period, the thicker the line (10 = 2 px … 200 = 1 px). Each EMA needs as many candles as its period |
 | **VWAP (daily)** | Volume-weighted average price | Resets every day (exchange time). Not applicable on 1D |
 | **Volume** | Bottom histogram | Forex has no volume (IB returns MIDPOINT): the panel says so |
 

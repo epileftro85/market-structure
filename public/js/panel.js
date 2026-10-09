@@ -15,10 +15,10 @@ const HTF_COLORS = { '1D': '#c084fc', '4H': '#22d3ee', '15m': '#a3e635' };
 const LINE_COLORS = { vwap: '#fbbf24' };
 /** Optional EMAs: the shorter the period, the thicker the line. Keys match the indicators menu. */
 export const EMAS = [
-  { key: 'ema10', period: 10, color: '#f9a8d4', width: 4 },
-  { key: 'ema20', period: 20, color: '#5eead4', width: 3 },
-  { key: 'ema50', period: 50, color: '#93c5fd', width: 2 },
-  { key: 'ema100', period: 100, color: '#a78bfa', width: 1.5 },
+  { key: 'ema10', period: 10, color: '#f9a8d4', width: 2 },
+  { key: 'ema20', period: 20, color: '#5eead4', width: 1.75 },
+  { key: 'ema50', period: 50, color: '#93c5fd', width: 1.5 },
+  { key: 'ema100', period: 100, color: '#a78bfa', width: 1.25 },
   { key: 'ema200', period: 200, color: '#e2e8f0', width: 1 },
 ];
 
